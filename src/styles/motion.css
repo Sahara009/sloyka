@@ -1,0 +1,213 @@
+/* ===================== Прелоадер «глазурь» ===================== */
+
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  overflow: hidden;
+  display: none;
+}
+
+/* показываем только если boot-скрипт решил, что это первый заход в визите */
+.is-preloading .preloader {
+  display: block;
+  pointer-events: auto;
+  background: var(--milk);
+}
+.is-preloading body {
+  overflow: hidden;
+}
+.no-preload .preloader {
+  display: none;
+}
+
+.preloader__layer {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 100%;
+  transform: translateY(-112%);
+  animation: glaze-pour 1.05s cubic-bezier(0.55, 0.05, 0.25, 1) forwards;
+  animation-delay: calc(var(--i) * 0.22s);
+  will-change: transform;
+}
+
+.preloader__drip {
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 0;
+  width: 100%;
+  height: clamp(110px, 16vw, 220px);
+  transform-origin: top;
+  animation: glaze-stretch 2.4s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * 0.22s + 0.9s);
+}
+
+@keyframes glaze-pour {
+  0% { transform: translateY(-112%); }
+  70% { transform: translateY(-4%); }
+  100% { transform: translateY(-10%); }
+}
+
+/* подтёки немного «тянутся», пока сайт грузится */
+@keyframes glaze-stretch {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(1.22); }
+}
+
+.preloader__logo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  color: var(--milk);
+  opacity: 0;
+  animation: logo-in 0.6s ease 0.85s forwards;
+}
+
+.preloader__mark { width: min(420px, 74vw); height: auto; overflow: visible; }
+.preloader__word {
+  font-family: var(--ff-heading);
+  font-size: clamp(54px, 11vw, 120px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.preloader__dots {
+  display: flex;
+  gap: 8px;
+}
+.preloader__dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--caramel-200);
+  animation: dot 1s ease-in-out infinite;
+}
+.preloader__dots i:nth-child(2) { animation-delay: 0.15s; }
+.preloader__dots i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dot {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-7px); opacity: 1; }
+}
+
+@keyframes logo-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* уход: глазурь стекает вниз, сверху открывается сайт */
+.preloader.is-leaving {
+  background: transparent;
+  pointer-events: none;
+}
+.preloader.is-leaving .preloader__logo {
+  animation: logo-out 0.35s ease forwards;
+}
+.preloader.is-leaving .preloader__layer {
+  animation: glaze-leave 1s cubic-bezier(0.6, 0, 0.3, 1) forwards;
+  animation-delay: calc((2 - var(--i)) * 0.12s);
+}
+.preloader.is-leaving .preloader__drip {
+  animation: none;
+}
+
+@keyframes glaze-leave {
+  from { transform: translateY(-10%); }
+  to { transform: translateY(125%); }
+}
+
+@keyframes logo-out {
+  to { opacity: 0; transform: translateY(16px); }
+}
+
+/* ===================== Появление при скролле ===================== */
+
+.js .reveal {
+  opacity: 0;
+  transition:
+    opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.js .reveal--up { transform: translateY(34px); }
+.js .reveal--left { transform: translateX(-40px); }
+.js .reveal--right { transform: translateX(40px); }
+.js .reveal--scale { transform: scale(0.92) rotate(-2deg); }
+/* «стекает» сверху вниз, как глазурь. Обрезаем ребёнка, а не сам элемент:
+   IntersectionObserver не видит элемент, обрезанный clip-path целиком */
+.js .reveal--drip { transform: translateY(-12px); }
+.js .reveal--drip > * {
+  clip-path: inset(0 0 100% 0 round 0 0 40px 40px);
+  transition: clip-path 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+.js .reveal--drip.is-in > * { clip-path: inset(0 0 0 0 round 0); }
+
+/* ===================== Мелкие живые детали ===================== */
+
+/* фото в фигурной маске чуть «дышит» при наведении карточки */
+.pcard .shape__inner img {
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.pcard:hover .shape__inner img {
+  transform: none;
+}
+
+/* лёгкое покачивание для декоративных товаров на первом экране */
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+.float--slow { animation-duration: 8s; animation-delay: -2s; }
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1.5deg); }
+}
+
+/* ===================== Без анимаций ===================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .preloader__layer,
+  .preloader__drip,
+  .preloader__logo,
+  .preloader__dots i {
+    animation: none !important;
+  }
+  .preloader__layer { transform: none; }
+  .preloader__layer:nth-child(-n + 2) { display: none; }
+  .preloader__drip { display: none; }
+  .preloader__logo { opacity: 1; }
+  .preloader.is-leaving { opacity: 0; transition: opacity 0.4s ease; }
+
+  .js .reveal,
+  .js .reveal--drip > * {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    transition: none;
+  }
+  .float { animation: none; }
+  .pcard:hover .shape__inner img { transform: none; }
+}
+
+/* вспышка при клике (components/ui/ClickSpark.tsx) */
+.spark { position: fixed; z-index: 9999; width: 0; height: 0; pointer-events: none; }
+.spark i {
+  position: absolute; left: -1.5px; top: 0; width: 3px; height: var(--len); border-radius: 3px; background: var(--spark);
+  transform-origin: 50% 0; transform: rotate(var(--a)) translateY(6px) scaleY(0.2); opacity: 0;
+  animation: spark 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+@keyframes spark {
+  0% { opacity: 1; transform: rotate(var(--a)) translateY(4px) scaleY(0.3); }
+  45% { opacity: 1; transform: rotate(var(--a)) translateY(12px) scaleY(1); }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(22px) scaleY(0.2); }
+}

@@ -1,0 +1,60 @@
+/* =====================================================================
+   Вариант оформления «С обводкой» (html[data-style="outline"]).
+   Как в референсе Pigice: у вещей обведены грани — толстый шоколадный контур
+   и плотная «тень-подложка» без размытия. Цвета остаются прежними.
+   ===================================================================== */
+
+[data-style="outline"] {
+  --ol: 2.5px solid var(--choc);
+  --ol-shadow: 4px 4px 0 var(--choc);
+  --ol-shadow-sm: 3px 3px 0 var(--choc);
+  --line: rgba(74, 46, 34, 0.55);
+}
+
+/* кнопки: контур + сдвиг при наведении */
+[data-style="outline"] .btn {
+  border-width: 2.5px;
+  box-shadow: var(--ol-shadow-sm);
+  transition: transform 0.15s, box-shadow 0.15s, background 0.2s, color 0.2s;
+}
+[data-style="outline"] .btn:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--choc); }
+[data-style="outline"] .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--choc); }
+[data-style="outline"] .btn--ghost { background: var(--paper); }
+[data-style="outline"] .btn--milk { border-color: var(--choc); }
+
+/* карточки и плашки */
+[data-style="outline"] :is(
+  .line-card, .about-teaser__card, .page-hero__card, .decor-card, .step, .checkout, .request-form,
+  .info-card, .scene, .b2b__why, .b2b__cta, .biz-banner, .drawer__img, .thumbs__item, .admin-box,
+  .theme-switch__toggle, .theme-switch__panel, .cookie, .scene__card
+) {
+  border: var(--ol);
+  box-shadow: var(--ol-shadow);
+}
+[data-style="outline"] .line-card__text { border: var(--ol); }
+[data-style="outline"] .b2b__paper { outline: var(--ol); box-shadow: var(--ol-shadow); }
+
+/* мелкие элементы выбора */
+[data-style="outline"] :is(.chip, .opt, .size, .counter, .qty, .field input, .field textarea, .field select, .radio, .glaze, .swatch) {
+  border: 2px solid var(--choc);
+}
+[data-style="outline"] :is(.opt, .size).is-active { box-shadow: var(--ol-shadow-sm); }
+[data-style="outline"] .chip.is-active { box-shadow: var(--ol-shadow-sm); }
+
+/* фигурные маски: обводка шоколадом вместо цветной */
+[data-style="outline"] .shape { --shape-outline: var(--choc) !important; }
+[data-style="outline"] .shape__inner { inset: max(var(--shape-stroke), 3px); }
+[data-style="outline"] .shape .shape__outline { background: var(--choc); }
+
+/* фото в арках, кейсах, галерее */
+[data-style="outline"] :is(.case__photo, .palette-section .pstripes__row) {
+  border: var(--ol);
+  box-shadow: var(--ol-shadow);
+}
+
+/* шапка, бегущая лента и плашки «хит» */
+[data-style="outline"] .pcard__tag,
+[data-style="outline"] .case__client { border: 2px solid var(--choc); }
+[data-style="outline"] .ticker { border-block: 2.5px solid var(--choc); }
+
+/* заголовки чуть «жирнее» за счёт контура у рукописных акцентов не делаем — читаемость важнее */

@@ -1,0 +1,184 @@
+// База данных Sloyka (PostgreSQL). Подключение — DATABASE_URL в .env.
+// Первый запуск: npm run db:push && npm run db:seed (перенесёт каталог из src/data в базу).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Товар каталога: сборки, подставки, детали, декор
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  line        String // home | classic | design | market | decor | art
+  kind        String // set | stand | part | base | podium | decor
+  price       Int? // минимальная цена, null — по запросу
+  short       String
+  description String
+  specs       String[]
+  image       String?
+  gallery     String[]
+  hit         Boolean  @default(false)
+  isNew       Boolean  @default(false)
+  active      Boolean  @default(true)
+  sort        Int      @default(0)
+  /// [{ id, label, price, group? }] — размеры со своей ценой
+  options     Json?
+  /// [{ id, name, swatch, image? }] — глазурь у Waffle's
+  variants    Json?
+  colors      String? // one | two | none
+  logoAddon   Boolean  @default(false)
+  /// SVG-превью и пресет конструктора (art, constructorPreset)
+  extra       Json?
+  /// упаковка: вес (г) и габариты (см) в собранном для отправки виде
+  weight      Int?
+  length      Int?
+  width       Int?
+  height      Int?
+  /// вкладывается внутрь другой детали и почти не занимает место в коробке
+  nests       Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([line, active])
+}
+
+/// Детали конструктора: подиумы, ножки, вкладыши, базы и подиумы Market
+model Part {
+  id     String @id // bonbon, muff, florence, cascade-1 …
+  group  String // podium | leg | extra | market-base | market-podium | crown
+  name   String
+  price  Int
+  active Boolean @default(true)
+  sort   Int     @default(0)
+  /// высота, совместимость, количество уровней и т.п.
+  meta   Json?
+  /// конструктор: фото детали в белом без фона (из него сайт перекрашивает), ширина на сцене и «заезд» под деталь сверху
+  image  String?
+  stageWidth Int?
+  tuck   Float?
+  /// настоящие фото в конкретных цветах: { "chocolate": "/uploads/…webp" } — показываются вместо перекраски
+  colorPhotos Json?
+  /// упаковка
+  weight Int?
+  length Int?
+  width  Int?
+  height Int?
+  nests  Boolean @default(false)
+}
+
+/// Коробки для отправки: сайт сам выбирает самую маленькую подходящую, менеджер может поменять
+model Box {
+  id        String  @id // S, M, L
+  name      String
+  length    Int // внутренние размеры, см
+  width     Int
+  height    Int
+  maxWeight Int // г
+  price     Int? // стоимость самой коробки, если нужно учитывать
+  active    Boolean @default(true)
+  sort      Int     @default(0)
+}
+
+/// Зоны Ozon / WB от Санкт-Петербурга: вилки «от–до» за коробку каждого размера
+model DeliveryZone {
+  id      String   @id // spb, msk, center, russia
+  title   String
+  /// города и регионы для сопоставления
+  match   String[]
+  daysMin Int
+  daysMax Int
+  /// { "S": [min, max], "M": [...], "L": [...] }
+  ozon    Json
+  wb      Json
+  sort    Int      @default(0)
+}
+
+/// Цвет пластика из палитры
+model Color {
+  id     String  @id // white, butter, latte …
+  name   String
+  hex    String
+  group  String // milk | pastel | pop | sweet | deep
+  sort   Int     @default(0)
+  active Boolean @default(true)
+}
+
+enum OrderStatus {
+  NEW // создан, ждёт оплаты
+  PAID // оплачен
+  IN_PRODUCTION // печатается
+  SHIPPED // передан в СДЭК / Ozon
+  DONE // получен
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  number          String      @unique // SL-XXXX — показываем клиенту
+  status          OrderStatus @default(NEW)
+  customerName    String
+  phone           String
+  email           String
+  deliveryMethod  String // cdek-pvz | cdek-courier | ozon-pvz | wb-pvz
+  deliveryCity    String?
+  deliveryAddress String
+  /// что покупатель видел на сайте: «≈ 450–700 ₽»
+  deliveryQuote   String?
+  /// подобранные коробки [{ box: "M", weight: 2300 }] — менеджер может поменять
+  packing         Json?
+  weight          Int?
+  comment         String?
+  amount          Int // сумма товаров, ₽ — пересчитана на сервере
+  deliveryPrice   Int?
+  paymentId       String? // id платежа в ЮKassa / PaymentId Т-Банка
+  paymentProvider String? // yookassa | tbank
+  trackNumber     String?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id      String   @id @default(cuid())
+  orderId String
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  name    String
+  /// ссылка на товар или состав сборки (см. src/lib/pricing.ts → ItemRef)
+  ref     Json
+  details String[]
+  price   Int // цена за штуку на момент заказа
+  qty     Int
+}
+
+/// Заявки с форм «Для бизнеса» и «Контакты»
+model Request {
+  id        String   @id @default(cuid())
+  topic     String
+  name      String
+  contact   String
+  message   String?
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+/// Кейсы «Торты на наших подставках»
+model CaseStudy {
+  id          String  @id @default(cuid())
+  photo       String
+  model       String
+  productSlug String
+  colors      String
+  price       Int
+  logo        Int?
+  client      String?
+  sort        Int     @default(0)
+  active      Boolean @default(true)
+}

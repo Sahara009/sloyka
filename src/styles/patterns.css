@@ -1,0 +1,143 @@
+/* Полоски и клетка — спокойные, не «дофаминовые» */
+
+.bg-stripes-blue {
+  background-color: var(--milk);
+  background-image: repeating-linear-gradient(90deg, var(--blue-200) 0 26px, var(--milk) 26px 52px);
+}
+
+.bg-stripes-sage {
+  background-color: var(--sage-100);
+  background-image: repeating-linear-gradient(90deg, var(--sage-200) 0 22px, var(--sage-100) 22px 44px);
+}
+
+.bg-stripes-caramel {
+  background-color: var(--cream);
+  background-image: repeating-linear-gradient(90deg, var(--caramel-200) 0 18px, var(--cream) 18px 36px);
+}
+
+/* тонкая шоколадная полоска — для акцентных плашек */
+.bg-stripes-choc {
+  background-color: var(--milk);
+  background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--choc) 10%, transparent) 0 2px, transparent 2px 22px);
+}
+
+/* виши (гингем) — голубая клетка на молочном */
+.bg-gingham {
+  background-color: var(--milk);
+  background-image:
+    linear-gradient(90deg, color-mix(in srgb, var(--blue-400) 32%, transparent) 50%, transparent 50%),
+    linear-gradient(color-mix(in srgb, var(--blue-400) 32%, transparent) 50%, transparent 50%);
+  background-size: 34px 34px;
+}
+
+.bg-gingham-sage {
+  background-color: var(--milk);
+  background-image:
+    linear-gradient(90deg, color-mix(in srgb, var(--sage-400) 30%, transparent) 50%, transparent 50%),
+    linear-gradient(color-mix(in srgb, var(--sage-400) 30%, transparent) 50%, transparent 50%);
+  background-size: 28px 28px;
+}
+
+/* фестоны — край секции. Цвет задаётся через --scallop-color */
+.scallop-top,
+.scallop-bottom {
+  height: 18px;
+  background-image: radial-gradient(circle at 18px 18px, var(--scallop-color, var(--cream)) 17.5px, transparent 18px);
+  background-size: 36px 18px;
+  background-repeat: repeat-x;
+}
+
+.scallop-bottom {
+  transform: scaleY(-1);
+}
+
+/* Фигурные маски — компонент <Shape/> */
+.shape {
+  position: relative;
+  width: 100%;
+}
+
+.shape__outline,
+.shape__inner {
+  position: absolute;
+  -webkit-mask-image: var(--mask);
+  mask-image: var(--mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.shape__outline {
+  inset: 0;
+  background: var(--shape-outline);
+}
+
+.shape__inner {
+  inset: var(--shape-stroke);
+  background: var(--shape-bg);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.shape__inner > svg,
+.shape__inner > img {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+}
+
+/* Если внутри фигуры полоска/клетка — передаём фон фигуры через класс */
+.shape.bg-stripes-blue,
+.shape.bg-gingham,
+.shape.bg-stripes-sage,
+.shape.bg-stripes-caramel {
+  background: none;
+}
+.shape.bg-stripes-blue .shape__inner { background: repeating-linear-gradient(90deg, var(--blue-200) 0 26px, var(--milk) 26px 52px); }
+.shape.bg-stripes-sage .shape__inner { background: repeating-linear-gradient(90deg, var(--sage-200) 0 22px, var(--sage-100) 22px 44px); }
+.shape.bg-stripes-caramel .shape__inner { background: repeating-linear-gradient(90deg, var(--caramel-200) 0 18px, var(--cream) 18px 36px); }
+.shape.bg-gingham .shape__inner {
+  background-color: var(--milk);
+  background-image:
+    linear-gradient(90deg, color-mix(in srgb, var(--blue-400) 32%, transparent) 50%, transparent 50%),
+    linear-gradient(color-mix(in srgb, var(--blue-400) 32%, transparent) 50%, transparent 50%);
+  background-size: 34px 34px;
+}
+
+/* бегущая строка */
+.ticker {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.ticker--choc { background: var(--choc); color: var(--milk); }
+.ticker--blue { background: var(--blue-200); color: var(--choc); }
+.ticker__track { display: flex; width: max-content; animation: ticker 40s linear infinite; }
+.ticker__row { display: flex; }
+.ticker span { padding: 0 14px; }
+.ticker i { font-style: normal; margin-left: 24px; color: var(--caramel); }
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* бегущая лента-волна */
+.wavy { position: relative; overflow: hidden; pointer-events: none; }
+.wavy svg { display: block; width: 100%; height: clamp(120px, 13.2vw, 210px); }
+.wavy__band { fill: none; stroke-width: 46; stroke-linecap: round; }
+.wavy__text { font-family: var(--ff-body); font-size: 20px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; white-space: pre; }
+.wavy__measure { visibility: hidden; }
+.wavy--choc .wavy__band { stroke: var(--choc); }
+.wavy--choc .wavy__text { fill: var(--milk); }
+.wavy--blue .wavy__band { stroke: var(--blue-200); }
+.wavy--blue .wavy__text { fill: var(--choc); }
+.wavy--caramel .wavy__band { stroke: var(--caramel-200); }
+.wavy--caramel .wavy__text { fill: var(--choc); }
+@media (max-width: 600px) { .wavy__text { font-size: 25px; } .wavy__band { stroke-width: 56; } }
+[data-style="outline"] .wavy__band { stroke-width: 46; filter: drop-shadow(0 2.5px 0 var(--choc)) drop-shadow(0 -2.5px 0 var(--choc)); }

@@ -1,0 +1,101 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* блоки выезжают сбоку при появлении — не даём им создавать горизонтальную прокрутку */
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  background: var(--milk);
+  color: var(--text);
+  font-family: var(--ff-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--ff-heading);
+  font-weight: 800;
+  line-height: 1;
+  margin: 0 0 0.4em;
+  letter-spacing: -0.025em;
+}
+
+h1 { font-size: clamp(38px, 5.2vw, 68px); }
+h2 { font-size: clamp(28px, 3.6vw, 46px); }
+h3 { font-size: clamp(22px, 2.2vw, 28px); }
+
+p { margin: 0 0 1em; }
+
+a { color: inherit; }
+
+img,
+svg { max-width: 100%; display: block; }
+
+button,
+input,
+textarea,
+select { font: inherit; color: inherit; }
+
+button { cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--blue-400);
+  outline-offset: 3px;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* цветной акцент внутри заголовков: «Столики, которые *собираются*» — тот же шрифт, карамельный цвет */
+.script {
+  font-family: var(--ff-script);
+  font-weight: inherit;
+  font-style: normal;
+  color: var(--caramel);
+  letter-spacing: 0;
+}
+
+
+
+.eyebrow {
+  font-family: var(--ff-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--choc-500);
+  margin-bottom: 14px;
+}
+
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+.section { padding: clamp(56px, 8vw, 110px) 0; }
+.section--tight { padding: clamp(36px, 5vw, 64px) 0; }
+
+.row-gap { display: flex; flex-wrap: wrap; gap: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,51 @@
+/* Дизайн-токены Sloyka.
+   Основа — нежно-голубой и молочный (как у Puzzle Pantry), акценты — шоколад, бордо, карамель, нежно-зелёный.
+   Без «дофаминовых» цветов: всё приглушённое. */
+:root {
+  /* основа */
+  --milk: #fbf6ec;
+  --cream: #f4ebda;
+  --cream-300: #eadcc2;
+
+  --blue-100: #e6eff5;
+  --blue-200: #cfe0ec;
+  --blue-300: #b5cfe2;
+  --blue-400: #8eb2cd;
+
+  /* акценты */
+  --choc: #4a2e22;
+  --choc-700: #5e3d2e;
+  --choc-500: #8a6a55;
+  --caramel: #c98a4b;
+  --caramel-200: #ecd2ae;
+  --bordeaux: #7a2632;
+  --bordeaux-300: #b46a72;
+  --blush-100: #f6e4e1;
+  --sage-100: #e8eedf;
+  --sage-200: #d5e0c7;
+  --sage-400: #9fb38b;
+
+  --text: var(--choc);
+  --muted: #8a6f5e;
+  --line: rgba(74, 46, 34, 0.16);
+  /* светлая подложка карточек и форм */
+  --paper: #fffdf8;
+
+  /* шрифты (подставляются из next/font, ниже — запасные) */
+  --ff-heading: var(--font-heading, "Nunito"), "Inter", system-ui, sans-serif;
+  --ff-body: var(--font-body, "Manrope"), "Inter", system-ui, sans-serif;
+  /* акцент — тот же округлый шрифт, что и заголовки (раньше был рукописный Bad Script — заказчикам не подошёл) */
+  --ff-script: var(--ff-heading);
+
+  --radius: 22px;
+  --radius-sm: 12px;
+  --container: 1240px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --shadow: 0 10px 30px -18px rgba(74, 46, 34, 0.45);
+}
+
+/* плавная смена темы (только когда её переключают, не при загрузке) */
+.theme-switching,
+.theme-switching * {
+  transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease !important;
+}
