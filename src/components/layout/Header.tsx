@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { CartIcon, CloseIcon, MenuIcon, SearchIcon } from "@/components/ui/Icons";
 import { SearchOverlay } from "./SearchOverlay";
@@ -24,7 +24,27 @@ export function Header() {
   const [search, setSearch] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  const burger = useRef<HTMLButtonElement>(null);
+  const [origin, setOrigin] = useState({ x: "90%", y: "40px" });
+
   useEffect(() => setOpen(false), [pathname]);
+
+  // шар раскрывается из кнопки меню; страница под ним не прокручивается
+  const toggleMenu = () => {
+    const r = burger.current?.getBoundingClientRect();
+    if (r) setOrigin({ x: `${Math.round(r.left + r.width / 2)}px`, y: `${Math.round(r.top + r.height / 2)}px` });
+    setOpen((v) => !v);
+  };
+  useEffect(() => {
+    document.documentElement.classList.toggle("menu-lock", open);
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.documentElement.classList.remove("menu-lock");
+    };
+  }, [open]);
 
   // наверху страницы шапка коричневая и высокая, при прокрутке — компактная и светлая.
   // Разные пороги (80 / 20 px), чтобы шапка не «дрожала» на границе.
@@ -36,7 +56,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className={`header ${scrolled ? "is-scrolled" : "is-top"}`}>
+    <header className={`header ${scrolled ? "is-scrolled" : "is-top"} ${open ? "is-menu" : ""}`}>
       <div className="announce">Доставка СДЭК и Ozon по всей России · оплата картой и СБП</div>
       <div className="header__bar container">
         <nav className="header__nav" aria-label="Основное меню">
@@ -62,7 +82,7 @@ export function Header() {
             <CartIcon />
             {count > 0 && <span className="badge">{count}</span>}
           </button>
-          <button type="button" className="header__burger" onClick={() => setOpen((v) => !v)} aria-label="Меню" aria-expanded={open}>
+          <button type="button" ref={burger} className="header__burger" onClick={toggleMenu} aria-label="Меню" aria-expanded={open}>
             {open ? <CloseIcon /> : <MenuIcon />}
           </button>
         </div>
@@ -71,16 +91,19 @@ export function Header() {
       <div className="header__cake" aria-hidden="true">
         <Drip color="var(--header-bg)" seed={13} depth={22} className="header__drip" />
       </div>
-      {open && (
-        <nav className="mobile-nav bg-stripes-blue" aria-label="Мобильное меню">
-          {nav.map((n) => (
-            <Link key={n.href} href={n.href}>
-              {n.label}
-            </Link>
-          ))}
-          <Link href="/delivery">Доставка и оплата</Link>
-        </nav>
-      )}
+      <nav
+        className={`mobile-nav ${open ? "is-open" : ""}`}
+        aria-label="Мобильное меню"
+        aria-hidden={!open}
+        style={{ ["--ox" as string]: origin.x, ["--oy" as string]: origin.y }}
+      >
+        {[...nav, { href: "/delivery", label: "Доставка и оплата" }].map((n, i) => (
+          <Link key={n.href} href={n.href} tabIndex={open ? 0 : -1} style={{ ["--i" as string]: i }}>
+            {n.label}
+          </Link>
+        ))}
+        <p className="mobile-nav__foot">Sloyka · десертные столики из Петербурга</p>
+      </nav>
       <SearchOverlay open={search} onClose={() => setSearch(false)} />
     </header>
   );
