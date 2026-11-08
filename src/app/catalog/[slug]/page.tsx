@@ -6,6 +6,7 @@ import { ProductView } from "@/components/catalog/ProductView";
 import { Reveal } from "@/components/ui/Reveal";
 import { lineTitles, type Product } from "@/data/products";
 import { getProduct, getProducts } from "@/lib/server/catalog";
+import { ldJson, productLd, seoDescription } from "@/lib/seo";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -27,8 +28,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!p) return {};
   return {
     title: p.name,
-    description: `${p.short}. ${p.description}`,
-    openGraph: p.image ? { images: [p.image] } : undefined,
+    description: seoDescription(`${p.short}. ${p.description}`),
+    alternates: { canonical: `/catalog/${p.slug}` },
+    openGraph: { title: p.name, description: seoDescription(p.short), url: `/catalog/${p.slug}`, images: [p.image ?? "/og.jpg"] },
   };
 }
 
@@ -41,12 +43,13 @@ export default async function ProductPage({ params }: Params) {
 
   return (
     <div className="container page">
+      <script type="application/ld+json" dangerouslySetInnerHTML={ldJson(productLd(product))} />
       <nav className="crumbs" aria-label="Хлебные крошки">
         <Link href="/catalog">Каталог</Link> / <Link href={`/catalog?line=${product.line}`}>{lineTitles[product.line]}</Link> /{" "}
         {product.name}
       </nav>
 
-      <ProductView product={product}>
+      <ProductView key={product.slug} product={product}>
         <div className="accordion">
           <details open>
             <summary>Характеристики</summary>

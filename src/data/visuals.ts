@@ -1,30 +1,32 @@
 /*
  * Как деталь выглядит в конструкторе.
  * base   — фото детали в белом без фона (из него сайт перекрашивает в любой цвет палитры);
- * width  — ширина в «единицах сцены» (1 ед. ≈ 1 px исходного фото, все фото сняты в одном масштабе);
+ * width  — ширина в «единицах сцены»: реальный диаметр × 13,5 (рендеры сняты в разном масштабе, поэтому считаем по сантиметрам);
  * tuck   — какая доля высоты детали уходит под деталь сверху (место крепления);
  * photos — настоящие фото в конкретных цветах: если есть, показываются вместо перекраски (обычно для тёмных цветов).
  *
- * TODO: когда заказчик пришлёт фото деталей в белом, заменить файлы в /public/products/base с теми же именами.
+ * overlays — слои того же кадра поверх детали (вкладыши Fleur, шарики BonBon): рисуются точно поверх, красятся отдельно.
+ * Рендеры от заказчика — 04.11 (осветлены, обрезаны по силуэту). Новые файлы класть с теми же именами.
  * Позже эти данные переедут в админку (модель Part: image, width, tuck, colorPhotos).
  */
 
-export type PartVisual = { base: string; width: number; tuck: number; photos?: Record<string, string> };
+export type PartVisual = { base: string; width: number; tuck: number; photos?: Record<string, string>; overlays?: Record<string, string> };
 
 const b = (n: string) => `/products/base/${n}.webp`;
+const cm = (d: number) => Math.round(d * 13.5);
 
 export const podiumVisuals: Record<string, PartVisual> = {
-  bonbon: { base: b("podium-bonbon"), width: 326, tuck: 0.34 },
-  fleur: { base: b("podium-fleur"), width: 323, tuck: 0.3 },
-  cappottina: { base: b("podium-cappottina"), width: 357, tuck: 0.42 },
+  bonbon: { base: b("podium-bonbon"), width: cm(24), tuck: 0.34, overlays: { balls1: b("bonbon-balls1"), balls2: b("bonbon-balls2") } },
+  fleur: { base: b("podium-fleur"), width: cm(24), tuck: 0.3, overlays: { nuts: b("fleur-insert-nuts"), honey: b("fleur-insert-honey"), flower: b("fleur-insert-flower") } },
+  cappottina: { base: b("podium-cappottina"), width: cm(27), tuck: 0.42 },
 };
 
 export const legVisuals: Record<string, PartVisual> = {
-  piccola: { base: b("leg-piccola"), width: 170, tuck: 0.06 },
-  pumpkin: { base: b("leg-pumpkin"), width: 185, tuck: 0.06 },
-  souffle: { base: b("leg-souffle"), width: 161, tuck: 0.05 },
-  muff: { base: b("leg-muff"), width: 158, tuck: 0.05 },
-  grande: { base: b("leg-grande"), width: 179, tuck: 0.05 },
+  piccola: { base: b("leg-piccola"), width: cm(11.5), tuck: 0.06 },
+  pumpkin: { base: b("leg-pumpkin"), width: cm(13), tuck: 0.06 },
+  souffle: { base: b("leg-souffle"), width: cm(12), tuck: 0.05 },
+  muff: { base: b("leg-muff"), width: cm(12), tuck: 0.05 },
+  grande: { base: b("leg-grande"), width: cm(13), tuck: 0.05 },
 };
 
 export const extraVisuals: Record<string, PartVisual> = {

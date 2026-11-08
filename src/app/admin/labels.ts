@@ -15,3 +15,10 @@ export const deliveryLabels: Record<string, string> = {
 };
 
 export const dateFmt = new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+export const paymentLabels: Record<string, string> = {
+  pending: "ждёт оплаты",
+  waiting_for_capture: "ждёт подтверждения",
+  succeeded: "оплачено",
+  canceled: "оплата отменена / не прошла",
+};

@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "build:demo": "node scripts/build-demo.mjs"
+    "build:demo": "node scripts/build-demo.mjs",
+    "images": "node scripts/image-sizes.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",

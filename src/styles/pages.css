@@ -710,7 +710,8 @@
   background: linear-gradient(to top, color-mix(in srgb, var(--milk) 85%, transparent), transparent); pointer-events: none;
 }
 .cfg__stack { position: relative; z-index: 1; width: 64%; display: flex; flex-direction: column; align-items: center; animation: cfg-pop .45s cubic-bezier(.2,.9,.3,1.3); filter: drop-shadow(0 18px 18px rgba(80, 50, 30, .16)); }
-.cfg__stack--market { width: 70%; }
+.cfg__stack--market { width: 100%; }
+.cfg__stack--market .stand-view { width: min(80%, calc(78% * var(--a))); }
 .cfg__piece { position: relative; flex: none; }
 .cfg__crown { width: 46%; margin-bottom: -2%; position: relative; z-index: 2; }
 @keyframes cfg-pop { from { transform: translateY(10px) scale(.97); opacity: .4; } to { transform: none; opacity: 1; } }
@@ -783,6 +784,8 @@
   .cfg__stage-wrap { position: sticky; top: 64px; z-index: 6; background: var(--milk); padding-bottom: 6px; }
   .cfg__stage { aspect-ratio: 16 / 10; }
   .cfg__stack { width: 40%; }
+  .cfg__stack--market { width: 100%; }
+  .cfg__stack--market .stand-view { width: min(70%, calc(50% * var(--a))); }
   .cfg__modes { flex-wrap: nowrap; margin-bottom: 16px; }
   .cfg__modes button { flex: 1; padding: 10px 12px; font-size: 13px; }
   .cfg__steps { flex-wrap: nowrap; overflow-x: auto; }
@@ -862,3 +865,90 @@
   .hw__stamp { width: 84px; height: 84px; font-size: 11px; right: 0; }
   .hw__pumpkin, .hw__bat--1 { display: none; }
 }
+
+/* подсказка, почему подиум нельзя добавить в стойку */
+.counter__hint { grid-column: 1 / -1; }
+
+/* блок «Собери свой» перед готовыми сборками */
+.builder-cta { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; margin: 0 0 24px; border-radius: 24px; text-decoration: none; color: var(--choc); border: 1.5px solid var(--blue-300); }
+.builder-cta > span:first-child { background: var(--milk); padding: 10px 14px; border-radius: 14px; display: grid; gap: 2px; }
+.builder-cta b { font-family: var(--ff-heading); font-size: 20px; font-weight: 800; }
+.builder-cta small { color: var(--muted); }
+@media (max-width: 640px) { .builder-cta { flex-direction: column; align-items: stretch; } }
+.line-tile--promo .line-tile__text { color: var(--bordeaux); }
+
+/* акции */
+.pcard__tag--promo { background: var(--caramel); }
+.pcard__old, .product__old { color: var(--muted); font-weight: 600; margin-left: 8px; font-size: .85em; }
+.promo-note { display: inline-block; margin: -4px 0 14px; padding: 6px 12px; border-radius: 999px; background: var(--blush-100); color: var(--bordeaux); font-size: 13px; }
+
+/* семейство: подиум ↔ столик ↔ сборки */
+.family { margin: 6px 0 18px; }
+.family__list { display: flex; flex-wrap: wrap; gap: 8px; }
+.family__list .size { text-decoration: none; color: inherit; }
+
+/* допы к столику */
+.addons { margin: 18px 0 8px; padding: 14px 16px; border-radius: 18px; background: var(--cream); display: grid; gap: 8px; }
+.addons__row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.addons__row a { text-decoration: none; color: inherit; }
+
+/* промокод в корзине */
+.promo-field { display: flex; gap: 8px; margin: 8px 0 4px; }
+.promo-field input { flex: 1; min-width: 0; padding: 10px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--milk); font: inherit; }
+
+/* 404 */
+.nf__art { position: relative; display: grid; place-items: center; margin: 0 auto 18px; }
+.nf__num { font-family: var(--font-heading), sans-serif; font-weight: 900; font-size: clamp(110px, 22vw, 200px); line-height: 1; color: var(--blue-200, #d8e9f6); letter-spacing: -.04em; }
+.nf__num span { color: transparent; }
+.nf__cloud { position: absolute; width: clamp(110px, 20vw, 180px); left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.nf .row-gap { flex-wrap: wrap; gap: 10px; }
+.nf__help { margin-top: 22px; }
+
+/* Акции на главной */
+.promo-block { position: relative; margin: clamp(32px, 5vw, 64px) 0; }
+.promo-block__body { background: var(--blush-100); padding: clamp(28px, 4vw, 56px) 0 clamp(12px, 2vw, 24px); }
+.promo-block .drip { height: clamp(36px, 5vw, 70px); }
+
+/* конструктор: деталь + слои поверх неё (вкладыш Fleur, шарики BonBon) */
+.cfg__slot { position: relative; flex: none; display: block; }
+.cfg__slot > .cfg__piece { display: block; }
+.cfg__overlay { position: absolute; inset: 0; width: 100%; }
+/* миниатюры деталей на карточках выбора конструктора */
+.cfg-thumb { position: relative; display: block; margin: 0 auto; }
+.cfg-thumb .tinted { width: 100%; }
+.cfg-thumb .cfg-thumb__over { position: absolute; inset: 0; }
+/* конструктор стоек: верх (корона/диадема) и ярусы сверху вниз */
+.top-pick { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 12px; }
+.tier-list--slots li { grid-template-columns: 1fr auto; padding: 0; }
+.tier-list--slots li.is-active { border-color: var(--choc); box-shadow: 0 0 0 1px var(--choc) inset; }
+.tier-list--slots li.is-gap { border-color: var(--bordeaux); }
+.tier-list__pick { display: grid; grid-template-columns: 110px 1fr; gap: 10px; align-items: center; text-align: left; padding: 9px 12px; background: none; border: 0; font: inherit; color: inherit; cursor: pointer; }
+.tier-list--slots .link-btn { padding: 0 12px; }
+.cfg-card:disabled .cfg-card__sub { color: var(--bordeaux); opacity: 1; }
+/* стойки Sloyka Market из рендеров деталей */
+.stand-view { position: relative; display: block; width: 100%; }
+.stand-view .stand-view__part { position: absolute; }
+.cfg-stand-thumb { width: min(100%, 130px); margin: 0 auto; }
+.diadem-pick { margin: 12px 0 4px; }
+.diadem-pick__row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.diadem-pick__row > span { min-width: 56px; }
+.product__stand.stand-view { width: min(84%, calc(100% * var(--a))); }
+/* «Собери свой набор»: карточки позиций с «Заменить» (шкатулки Cachette, Minies) */
+.set-slots { display: grid; gap: 10px; }
+.set-slot { border: 1.5px solid var(--line); border-radius: 18px; background: var(--paper); }
+.set-slot.is-open { border-color: var(--choc); }
+.set-slot__row { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 8px 12px 8px 8px; }
+.set-slot__thumb, .set-opt__thumb { position: relative; display: block; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--cream); }
+.set-slot__thumb img, .set-opt__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.set-slot__thumb .stack, .set-opt__thumb .stack { position: absolute; inset: 8%; }
+.set-slot__thumb .stack > *, .set-opt__thumb .stack > * { position: absolute; inset: 0; }
+.set-slot__thumb .stack img, .set-opt__thumb .stack img { object-fit: contain; }
+.set-slot__text { display: grid; gap: 2px; min-width: 0; font-size: 14px; }
+.set-slot__title { font-size: 12px; opacity: 0.65; }
+.set-slot__text select { margin-top: 4px; max-width: 100%; }
+.set-slot__colors { display: flex; flex-wrap: wrap; gap: 6px; }
+.set-slot__swap { border: 0; border-radius: 999px; padding: 8px 14px; background: var(--cream-300); font: inherit; font-size: 13px; cursor: pointer; }
+.set-slot__options { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; padding: 0 12px 12px; }
+.set-opt { display: grid; gap: 4px; padding: 4px; border: 1.5px solid transparent; border-radius: 14px; background: none; font: inherit; font-size: 12px; text-align: center; cursor: pointer; }
+.set-opt.is-active { border-color: var(--choc); }
+.set-slot__colors select { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--text); }

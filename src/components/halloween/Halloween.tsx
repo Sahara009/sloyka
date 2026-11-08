@@ -87,7 +87,7 @@ export function Halloween() {
                 <Link href="/catalog/halloween-toppers" className="btn hw__btn">
                   Хочу этот сет
                 </Link>
-                <Link href="/catalog?line=toppers" className="btn btn--ghost hw__btn-ghost">
+                <Link href="/catalog?line=topper" className="btn btn--ghost hw__btn-ghost">
                   Все топперы
                 </Link>
               </div>

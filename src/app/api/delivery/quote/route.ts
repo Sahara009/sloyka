@@ -7,6 +7,8 @@ import { getShippingData } from "@/lib/server/shipping";
 
 const schema = z.object({
   city: z.string().trim().min(2).max(120),
+  /** код города СДЭК из подсказки — по нему расчёт точнее, чем по названию */
+  cityCode: z.number().int().positive().optional(),
   items: z
     .array(
       z.object({
@@ -34,14 +36,14 @@ export type QuoteOption = {
 };
 
 /**
- * Примерная стоимость доставки для корзины.
+ * Стоимость доставки для корзины. СДЭК — точная цена по API (её же сервер возьмёт в оплату, см. /api/orders).
  * 1) подбираем коробки по весу и габаритам; 2) СДЭК — по API (если есть ключи), иначе ориентир;
  * 3) Ozon и WB — вилка по зоне города от Санкт-Петербурга.
  */
 export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Укажите город" }, { status: 400 });
-  const { city, items } = parsed.data;
+  const { city, cityCode, items } = parsed.data;
 
   const withKind = await Promise.all(
     items.map(async (i) => ({ qty: i.qty, ref: i.ref as never, kind: i.ref.kind === "product" ? (await getProduct(i.ref.slug))?.kind : undefined })),
@@ -55,7 +57,7 @@ export async function POST(req: Request) {
   let cdekExact = false;
   if (cdekConfigured()) {
     try {
-      const q = await cdekQuote(city, packing);
+      const q = await cdekQuote(cityCode ?? city, packing);
       for (const o of q) options.push({ method: o.method, price: o.price, days: o.days, approx: false });
       cdekExact = q.length > 0;
     } catch (e) {

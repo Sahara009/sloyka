@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { Drip } from "@/components/ui/Drip";
@@ -6,7 +7,7 @@ import { Photo } from "@/components/ui/Photo";
 import { Carousel } from "@/components/ui/Carousel";
 import { Reveal } from "@/components/ui/Reveal";
 import { Cases } from "@/components/ui/Cases";
-import { Halloween } from "@/components/halloween/Halloween";
+import { PromoBlock } from "@/components/promo/PromoBlock";
 import { Faq } from "@/components/ui/Faq";
 import { LogoStrip } from "@/components/ui/LogoStrip";
 import { PaletteStripes } from "@/components/ui/PaletteStripes";
@@ -16,11 +17,13 @@ import { lineNotes, lineTitles, type Line } from "@/data/products";
 import { getProducts } from "@/lib/server/catalog";
 import { site } from "@/lib/format";
 
-/* Линейки на главной: фото, фигура и фон-узор у каждой свои */
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
+/* Направления на главной: фото, фигура и фон-узор у каждого свои. Wish добавим, когда появятся товары */
 const lines: { id: Line; text: string; image: string; shape: ShapeName; outline: string; bg: string; pattern: string }[] = [
   {
-    id: "home",
-    text: "Подиумы Bonbon, Fleur, Cappottina и пять ножек — собираются как конструктор.",
+    id: "podium",
+    text: "Столики для тортов Muffin и Marble, дизайнерские Milano и Rossi, модульные столики-конструкторы, подиумы Penny.",
     image: "/products/set-cappottina-pumpkin-muff.webp",
     shape: "scallop",
     outline: "var(--blue-400)",
@@ -28,26 +31,8 @@ const lines: { id: Line; text: string; image: string; shape: ShapeName; outline:
     pattern: "bg-gingham",
   },
   {
-    id: "classic",
-    text: "Muffin и Marble от 10 до 30 см. Можно с вашим логотипом.",
-    image: "/products/classic-muffin.webp",
-    shape: "clover",
-    outline: "var(--caramel)",
-    bg: "var(--milk)",
-    pattern: "bg-stripes-caramel",
-  },
-  {
-    id: "design",
-    text: "Modular, Milano, Rossi, Penny и Podium I — столики 2 в 1 и подиумы.",
-    image: "/products/design-milano.webp",
-    shape: "arch",
-    outline: "var(--blue-400)",
-    bg: "var(--milk)",
-    pattern: "bg-stripes-blue",
-  },
-  {
     id: "market",
-    text: "Стенды из базы, подиумов и короны с вашей вывеской — для маркетов и витрин.",
+    text: "Стойки из базы и подиумов, конструктор стоек, вывески, тейблтенты и колесо фортуны для маркетов и витрин.",
     image: "/products/stand-babylon-crown.webp",
     shape: "arch-scallop",
     outline: "var(--sage-400)",
@@ -55,16 +40,16 @@ const lines: { id: Line; text: string; image: string; shape: ShapeName; outline:
     pattern: "bg-stripes-sage",
   },
   {
-    id: "art",
-    text: "Ночник и органайзеры-вафли с подтёками глазури.",
-    image: "/products/waffle-nightlight-raspberry.webp",
+    id: "home",
+    text: "Вафельная коллекция: органайзеры с подтёками глазури, шкатулки и домашний декор.",
+    image: "/products/waffle-tall-raspberry.webp",
     shape: "cloud",
     outline: "var(--bordeaux-300)",
     bg: "var(--milk)",
     pattern: "bg-gingham-sage",
   },
   {
-    id: "toppers",
+    id: "topper",
     text: "Сезонные сеты топперов для тортов, бенто и капкейков. Сейчас — Хэллоуин.",
     image: "/photos/toppers-ghosts.webp",
     shape: "arch",
@@ -72,16 +57,8 @@ const lines: { id: Line; text: string; image: string; shape: ShapeName; outline:
     bg: "var(--milk)",
     pattern: "bg-gingham",
   },
-  {
-    id: "decor",
-    text: "Вывески, тейблтенты и логотипы на подставке для кофеен и кондитерских.",
-    image: "/products/decor-crown.webp",
-    shape: "stamp",
-    outline: "var(--choc-500)",
-    bg: "var(--milk)",
-    pattern: "bg-stripes-choc",
-  },
 ];
+
 
 const gallery = [
   { src: "/photos/fleur-trio.webp", alt: "Подиумы Fleur в трёх цветах" },
@@ -99,7 +76,24 @@ const gallery = [
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const hits = (await getProducts()).filter((p) => p.hit);
+  const all = await getProducts();
+  const hits = all.filter((p) => p.hit);
+  // Wish появляется на главной сам, как только в каталоге есть хотя бы один его товар
+  const wishProduct = all.find((p) => p.line === "wish");
+  const shownLines = wishProduct
+    ? [
+        ...lines,
+        {
+          id: "wish" as Line,
+          text: "Брелоки, бирки и подвесы: мелочи в подарок клиентам, в том числе с вашим логотипом.",
+          image: wishProduct.image ?? "/logo.svg",
+          shape: "clover" as ShapeName,
+          outline: "var(--caramel)",
+          bg: "var(--milk)",
+          pattern: "bg-stripes-caramel",
+        },
+      ]
+    : lines;
   return (
     <>
       {/* Первый экран */}
@@ -211,8 +205,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Сезонная секция — убрать после 1 ноября (или заменить на новогоднюю) */}
-      <Halloween />
+      {/* Акции — вместо хэллоуинской секции (заказчик, 03.11). Хэллоуин лежит в components/halloween — пригодится через год */}
+      <PromoBlock products={all} />
 
       {/* Линейки */}
       <section className="section--tight">
@@ -223,7 +217,7 @@ export default async function HomePage() {
             </h2>
           </Reveal>
           <div className="lines">
-            {lines.map((l, i) => (
+            {shownLines.map((l, i) => (
               <Reveal key={l.id} effect={i % 2 ? "right" : "left"} delay={(i % 2) * 120}>
                 <Link href={`/catalog?line=${l.id}`} className={`line-card ${l.pattern}`}>
                   <div className="line-card__text">
@@ -258,7 +252,7 @@ export default async function HomePage() {
               {[
                 { src: "/products/podium-fleur.webp", t: "1. Столешница", d: "Bonbon, Fleur или Cappottina" },
                 { src: "/products/leg-muff.webp", t: "2. Ножка", d: "от 8 до 14 см, можно в два яруса" },
-                { src: "/products/insert-flower.webp", t: "3. Допы", d: "вкладыши и подиум Attico" },
+                { src: "/products/insert-flower.webp", t: "3. Допы", d: "вкладыши Fleur и шарики BonBon" },
               ].map((s, i) => (
                 <Reveal key={s.t} effect="scale" delay={i * 160} className="how__step-wrap">
                   {i > 0 && <span className="how__plus">+</span>}
@@ -289,13 +283,13 @@ export default async function HomePage() {
       <section className="section">
         <div className="container">
           <Reveal effect="drip" className="scene">
-            <Photo src="/photos/scene-table.webp" alt="Десертные столики Sloyka Home на деревянном столе" className="scene__img" />
+            <Photo src="/photos/scene-table.webp" alt="Десертные столики Sloyka Podium на деревянном столе" className="scene__img" />
             <div className="scene__card">
-              <p className="eyebrow">Sloyka Home</p>
+              <p className="eyebrow">Sloyka Podium</p>
               <p className="scene__title">
                 Сегодня — одна сборка. <span className="script">Завтра</span> — другая.
               </p>
-              <Link href="/catalog?line=home" className="more">
+              <Link href="/catalog?line=podium" className="more">
                 Готовые сборки <ArrowIcon />
               </Link>
             </div>
@@ -317,22 +311,22 @@ export default async function HomePage() {
               </Reveal>
               <Reveal delay={120}>
                 <p>
-                  Ночник и органайзеры в форме вафли с подтёками глазури: малиновый йогурт, сливочное масло, фисташка,
+                  Органайзеры и монетница в форме вафли с подтёками глазури: малиновый йогурт, сливочное масло, фисташка,
                   клубнично-ягодный и сахарная глазурь.
                 </p>
               </Reveal>
               <Reveal delay={200}>
-                <Link href="/catalog?line=art" className="btn">
+                <Link href="/catalog?line=home" className="btn">
                   Смотреть коллекцию
                 </Link>
               </Reveal>
             </div>
             <div className="waffles__items">
               {[
-                { src: "/products/waffle-nightlight-raspberry.webp", n: "Night Light", p: "2 490 ₽", slug: "waffle-night-light" },
                 { src: "/products/waffle-tall-pistachio.webp", n: "Tall", p: "550 ₽", slug: "waffle-tall" },
                 { src: "/products/waffle-square-strawberry.webp", n: "Square", p: "600 ₽", slug: "waffle-square" },
                 { src: "/products/waffle-round-raspberry.webp", n: "Round", p: "490 ₽", slug: "waffle-round" },
+                { src: "/products/waffle-tray.webp", n: "Jewellery Tray", p: "400 ₽", slug: "waffle-tray" },
               ].map((w, i) => (
                 <Reveal key={w.slug} effect="up" delay={i * 110}>
                   <Link href={`/catalog/${w.slug}`} className="waffle">

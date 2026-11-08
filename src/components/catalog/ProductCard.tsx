@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { hasPriceFrom, type Product } from "@/data/products";
+import { effectivePrice, hasPriceFrom, promoActive, type Product } from "@/data/products";
 import { ProductVisual } from "@/components/art/ProductArt";
 import { Shape, type ShapeName } from "@/components/ui/Shape";
 import { formatPrice } from "@/lib/format";
@@ -30,12 +30,18 @@ export function ProductCard({ product, index = 0, simple }: { product: Product; 
         <ProductVisual product={product} className={isPhoto ? "pcard__photo" : "pcard__art"} />
       </Shape>
       )}
-      {(product.hit || product.isNew) && <span className="pcard__tag">{product.isNew ? "new" : "хит"}</span>}
+      {promoActive(product) ? (
+        <span className="pcard__tag pcard__tag--promo">{product.promo!.label}</span>
+      ) : (
+        (product.badge || product.hit || product.isNew) && <span className="pcard__tag">{product.badge ?? (product.isNew ? "new" : "хит")}</span>
+      )}
+      {product.multi && <span className="pcard__multi">{product.multi}</span>}
       <span className="pcard__name">{product.name}</span>
       <span className="pcard__meta">{product.short}</span>
       <span className="pcard__price">
         {from && "от "}
-        {formatPrice(product.price)}
+        {formatPrice(effectivePrice(product))}
+        {promoActive(product) && <s className="pcard__old"> {formatPrice(product.oldPrice!)}</s>}
       </span>
     </Link>
   );

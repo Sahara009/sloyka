@@ -19,7 +19,14 @@ export function ProductVisual({
   const src = image ?? product.image;
   if (src) return <Photo src={src} alt={product.name} className={className} eager={eager} />;
   if (product.art) return <ProductArt art={product.art} className={className} title={product.name} />;
-  return null;
+  // ни фото, ни иллюстрации — логотип-заглушка, пока заказчик не пришлёт фото
+  return (
+    <span className={`photo-soon ${className ?? ""}`} role="img" aria-label={product.name}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.svg" alt="" />
+      <small>фото скоро</small>
+    </span>
+  );
 }
 
 export function ProductArt({ art, className, title }: { art: Art; className?: string; title?: string }) {

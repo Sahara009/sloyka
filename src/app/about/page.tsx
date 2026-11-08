@@ -5,7 +5,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Shape } from "@/components/ui/Shape";
 import { Ticker } from "@/components/ui/Ticker";
 
-export const metadata: Metadata = { title: "История бренда", description: "Как появилась Sloyka и почему наши столики собираются как конструктор." };
+export const metadata: Metadata = { title: "История бренда", description: "Как появилась Sloyka и почему наши столики собираются как конструктор.", alternates: { canonical: "/about" } };
 
 // TODO: тексты истории бренда пришлёт заказчик — ниже заглушки той же длины
 export default function AboutPage() {
@@ -39,8 +39,8 @@ export default function AboutPage() {
             <Shape shape="scallop" bg="var(--blue-100)">
               <Photo src="/products/set-fleur-muff.webp" alt="" />
             </Shape>
-            <h3>Sloyka Home</h3>
-            <p className="muted">Десертные столики для дома, праздников и фотосессий.</p>
+            <h3>Sloyka Podium</h3>
+            <p className="muted">Столики для тортов и модульные десертные столики для дома, праздников и фотосессий.</p>
           </Reveal>
           <Reveal className="fact" delay={120}>
             <Shape shape="clover" bg="var(--sage-100)">
@@ -51,10 +51,10 @@ export default function AboutPage() {
           </Reveal>
           <Reveal className="fact" delay={240}>
             <Shape shape="quatrefoil" bg="var(--blush-100)">
-              <Photo src="/products/waffle-nightlight-raspberry.webp" alt="" />
+              <Photo src="/products/waffle-tall-raspberry.webp" alt="" />
             </Shape>
             <h3>Art Decor</h3>
-            <p className="muted">Ночники и органайзеры-вафли — сладкий декор для дома и рабочего стола.</p>
+            <p className="muted">Органайзеры-вафли и шкатулки — сладкий декор для дома и рабочего стола.</p>
           </Reveal>
         </div>
       </section>

@@ -34,6 +34,8 @@ const run = (cmd, args) => {
   const r = spawnSync(cmd, args, { cwd: tmp, stdio: "inherit", env, shell: process.platform === "win32" });
   if (r.status !== 0) process.exit(r.status ?? 1);
 };
+// размеры картинок пересчитываем сами — можно добавлять фото прямо через сайт GitHub, без npm run images
+run("node", ["scripts/image-sizes.mjs"]);
 run("npx", ["next", "build"]);
 run("node", ["scripts/prefix-assets.mjs", "out", base]);
 writeFileSync(join(tmp, "out/.nojekyll"), "");

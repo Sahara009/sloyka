@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CookieSettingsButton } from "@/components/consent/CookieBanner";
 import { site } from "@/lib/format";
+import { FooterLogo } from "./FooterLogo";
 
 export function Footer() {
   return (
@@ -34,7 +35,7 @@ export function Footer() {
             <a href={site.instagram} target="_blank" rel="noreferrer">
               Instagram*
             </a>
-            <a href={`mailto:${site.email}`}>{site.email}</a>
+            {site.email && <a href={`mailto:${site.email}`}>{site.email}</a>}
           </div>
         </div>
         <div className="container footer__legal">
@@ -45,15 +46,12 @@ export function Footer() {
           <CookieSettingsButton />
         </div>
         <div className="container footer__note">
-          <span>© {new Date().getFullYear()} Sloyka. {/* TODO: ФИО/ИНН продавца */}Самозанятый [ФИО], ИНН [—]</span>
+          <span>© {new Date().getFullYear()} Sloyka. {site.seller.name}, ИНН {site.seller.inn}, плательщик НПД (самозанятый)</span>
           <span>*Instagram принадлежит компании Meta, признанной экстремистской и запрещённой на территории РФ</span>
         </div>
-        {/* большой логотип во всю ширину — как сейчас модно */}
+        {/* большой логотип во всю ширину: буквы по одной выезжают снизу, когда подвал на экране */}
         <div className="footer__giant-wrap">
-          <Link href="/" aria-label="Sloyka — на главную">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-light.svg" alt="Sloyka" className="footer__giant" width={649} height={241} loading="lazy" />
-          </Link>
+          <FooterLogo />
         </div>
       </div>
     </footer>

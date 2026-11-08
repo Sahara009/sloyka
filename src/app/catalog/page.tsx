@@ -5,7 +5,8 @@ import { getProducts } from "@/lib/server/catalog";
 
 export const metadata: Metadata = {
   title: "Каталог",
-  description: "Десертные столики Sloyka Home, подставки Classic Cakestand, Design Stand, стенды Sloyka Market, Art Decor Waffle's и вывески.",
+  description: "Sloyka Podium (столики для тортов и модульные столики), Sloyka Market (стойки, вывески), Sloyka Home (вафли, шкатулки), Sloyka Topper (топперы).",
+  alternates: { canonical: "/catalog" },
 };
 
 export const revalidate = 60;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db, hasDb } from "@/lib/server/db";
+import { notify, requestText } from "@/lib/integrations/telegram";
 
 const schema = z.object({
   topic: z.string().max(100).default("Заявка"),
@@ -12,7 +13,7 @@ const schema = z.object({
 
 /**
  * Заявки с форм «Для бизнеса» и «Контакты». Сохраняются в базу (если подключена) и видны в админке.
- * TODO: уведомление заказчику в Telegram-бот.
+ * Плюс уведомление в Telegram (если задан бот).
  */
 export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
@@ -20,5 +21,6 @@ export async function POST(req: Request) {
   const { topic, name, contact, message } = parsed.data;
   if (hasDb) await db().request.create({ data: { topic, name, contact, message } });
   else console.log("[request] без базы:", topic, name, contact);
+  await notify(requestText({ topic, name, contact, message }));
   return NextResponse.json({ ok: true });
 }

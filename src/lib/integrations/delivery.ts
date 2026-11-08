@@ -2,6 +2,8 @@
  * Доставка: СДЭК (API v2) — точный расчёт по API; Ozon и WB — примерные вилки по зонам (src/lib/shipping.ts).
  * Ключи СДЭК: CDEK_ACCOUNT / CDEK_SECURE из личного кабинета (договор с СДЭК).
  * Для проверки без договора: CDEK_TEST=1 — тестовый контур api.edu.cdek.ru с публичными тестовыми ключами из документации СДЭК.
+ * Решение 03.11: пункт выдачи выбирается списком по городу (без карты, ключ Яндекс Карт не нужен) — /v2/deliverypoints.
+ * Доставка СДЭК входит в оплату заказа.
  * TODO: сверить коды тарифов с договором заказчика (136 — склад-склад/ПВЗ, 137 — склад-дверь/курьер).
  */
 import { ORIGIN } from "@/data/shipping";
@@ -34,15 +36,58 @@ export async function getCdekToken(): Promise<string> {
 
 export type CdekQuote = { method: "cdek-pvz" | "cdek-courier"; price: number; days: [number, number]; tariff: number };
 
-/** Расчёт по всем тарифам сразу (calculator/tarifflist), берём ПВЗ и курьера */
-export async function cdekQuote(city: string, packing: Packing): Promise<CdekQuote[]> {
+async function cdekGet<T>(path: string): Promise<T> {
+  const token = await getCdekToken();
+  const res = await fetch(`${CDEK_API}${path}`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+  if (!res.ok) throw new Error(`СДЭК: ${path.split("?")[0]} — ${res.status}`);
+  return (await res.json()) as T;
+}
+
+export type CdekCity = { code: number; name: string };
+
+/** Подсказки городов по началу названия (location/suggest/cities), запасной вариант — location/cities */
+export async function cdekCities(q: string): Promise<CdekCity[]> {
+  const name = q.trim();
+  if (name.length < 2) return [];
+  try {
+    const list = await cdekGet<{ code: number; full_name: string }[]>(`/location/suggest/cities?name=${encodeURIComponent(name)}&country_code=RU`);
+    if (list.length) return list.slice(0, 10).map((c) => ({ code: c.code, name: c.full_name.replace(/,\s*Россия$/, "") }));
+  } catch {
+    /* подсказки недоступны — ищем по точному названию */
+  }
+  const list = await cdekGet<{ code: number; city: string; region?: string; sub_region?: string }[]>(
+    `/location/cities?city=${encodeURIComponent(name)}&country_codes=RU&size=10`,
+  );
+  return list.map((c) => ({ code: c.code, name: [c.city, c.sub_region, c.region].filter(Boolean).join(", ") }));
+}
+
+export type CdekPoint = { code: string; name: string; address: string; workTime?: string };
+
+const pointsCache = new Map<number, { until: number; list: CdekPoint[] }>();
+
+/** Пункты выдачи СДЭК в городе (deliverypoints, тип PVZ), кэш на 6 часов */
+export async function cdekPoints(cityCode: number): Promise<CdekPoint[]> {
+  const hit = pointsCache.get(cityCode);
+  if (hit && hit.until > Date.now()) return hit.list;
+  const raw = await cdekGet<{ code: string; name?: string; work_time?: string; location?: { address?: string; address_full?: string } }[]>(
+    `/deliverypoints?city_code=${cityCode}&type=PVZ&country_code=RU`,
+  );
+  const list = raw
+    .map((p) => ({ code: p.code, name: p.name ?? p.code, address: p.location?.address ?? p.location?.address_full ?? "", workTime: p.work_time }))
+    .sort((a, b) => a.address.localeCompare(b.address, "ru"));
+  pointsCache.set(cityCode, { until: Date.now() + 6 * 3600_000, list });
+  return list;
+}
+
+/** Расчёт по всем тарифам сразу (calculator/tarifflist), берём ПВЗ и курьера. to — код города СДЭК или название */
+export async function cdekQuote(to: number | string, packing: Packing): Promise<CdekQuote[]> {
   const token = await getCdekToken();
   const res = await fetch(`${CDEK_API}/calculator/tarifflist`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from_location: { code: ORIGIN.cdekCityCode },
-      to_location: { address: city },
+      to_location: typeof to === "number" ? { code: to } : { address: to },
       packages: packing.boxes.map((b) => ({ weight: b.weight, length: b.box.length, width: b.box.width, height: b.box.height })),
     }),
     cache: "no-store",

@@ -3,7 +3,7 @@ import { legs as legData, type HomeExtraId, type LegId, type PodiumId } from "@/
 import { shade } from "@/lib/format";
 
 /**
- * Схематичная иллюстрация десертного столика Sloyka Home.
+ * Схематичная иллюстрация десертного столика Sloyka Podium.
  * Используется в каталоге и конструкторе, пока нет фото комплектующих.
  * Когда заказчик пришлёт PNG без фона, можно заменить на слои картинок.
  */

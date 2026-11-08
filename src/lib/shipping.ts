@@ -2,8 +2,9 @@
  * Упаковка заказа в коробки и примерная доставка Ozon / WB.
  * Работает и в браузере, и на сервере. Цифры берутся из src/data/shipping.ts (позже — из админки).
  */
-import { boxes as defaultBoxes, kindPhysics, marketPodiumPhysics, partPhysics, productPhysics, zones, type Box, type DeliveryZone, type Physics, type Range } from "@/data/shipping";
+import { boxes as defaultBoxes, kindPhysics, marketPodiumPhysics, partPhysics, productPhysics, productWeights, zones, type Box, type DeliveryZone, type Physics, type Range } from "@/data/shipping";
 import type { ItemRef } from "@/lib/pricing";
+import { productBySlug } from "@/data/products";
 
 /** Какая доля объёма детали «nests» реально занимает место (она лежит внутри другой) */
 const NEST_FACTOR = 0.25;
@@ -31,7 +32,15 @@ export function piecesOf(item: PackItem): Physics[] {
   } else if (ref?.kind === "market") {
     one = [partPhysics[ref.base] ?? kindPhysics.base, ...ref.podiums.map((id) => partPhysics[id] ?? marketPodiumPhysics), ...(ref.crown ? [partPhysics.crown] : [])];
   } else if (ref?.kind === "product") {
-    one = [productPhysics[ref.slug] ?? kindPhysics[item.kind ?? ""] ?? kindPhysics.set];
+    const preset = productBySlug(ref.slug)?.marketPreset;
+    if (preset) {
+      // готовая стойка — по деталям, как сборка из конструктора
+      one = [partPhysics[preset.base] ?? kindPhysics.base, ...preset.podiums.map((id) => partPhysics[id] ?? marketPodiumPhysics), ...(preset.crown ? [partPhysics.crown] : [])];
+    } else {
+      const base = productPhysics[ref.slug] ?? kindPhysics[item.kind ?? ""] ?? kindPhysics.set;
+      const grams = (ref.option && productWeights[`${ref.slug}:${ref.option}`]) || productWeights[ref.slug];
+      one = [grams ? { ...base, weight: grams } : base];
+    }
   } else {
     one = [kindPhysics[item.kind ?? ""] ?? kindPhysics.set];
   }

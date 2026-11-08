@@ -5,6 +5,7 @@ import { Reveal } from "@/components/ui/Reveal";
 export const metadata: Metadata = {
   title: "Конструктор",
   description: "Соберите свой десертный столик или стенд: подиум, ножка, детали и цвета из палитры Sloyka.",
+  alternates: { canonical: "/constructor" },
 };
 
 export default function ConstructorPage() {

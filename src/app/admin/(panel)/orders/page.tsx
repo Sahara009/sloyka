@@ -58,7 +58,7 @@ export default async function AdminOrders({ searchParams }: Props) {
                 </td>
                 <td>{deliveryLabels[o.deliveryMethod] ?? o.deliveryMethod}</td>
                 <td>{o._count.items}</td>
-                <td>{formatPrice(o.amount)}</td>
+                <td>{formatPrice(o.amount + (o.deliveryPrice ?? 0))}{o.refunded > 0 && <div className="muted small">возврат {formatPrice(o.refunded)}</div>}</td>
                 <td>
                   <span className={`pill pill--${o.status.toLowerCase()}`}>{statusLabels[o.status]}</span>
                 </td>

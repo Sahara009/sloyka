@@ -3,7 +3,7 @@ import { RequestForm } from "@/components/ui/RequestForm";
 import { site } from "@/lib/format";
 import { Reveal } from "@/components/ui/Reveal";
 
-export const metadata: Metadata = { title: "Контакты", description: "Как связаться с Sloyka: Telegram, Instagram, почта." };
+export const metadata: Metadata = { title: "Контакты", description: "Как связаться с Sloyka: Telegram, Instagram, почта.", alternates: { canonical: "/contacts" } };
 
 export default function ContactsPage() {
   return (
@@ -28,14 +28,18 @@ export default function ContactsPage() {
               Смотреть сторис и новинки
             </a>
           </li>
-          <li className="bg-stripes-caramel">
-            <span>Почта</span>
-            <a href={`mailto:${site.email}`}>{site.email}</a>
-          </li>
-          <li className="bg-stripes-blue">
-            <span>Телефон</span>
-            <a href={`tel:${site.phone.replace(/[^+\d]/g, "")}`}>{site.phone}</a>
-          </li>
+          {site.email && (
+            <li className="bg-stripes-caramel">
+              <span>Почта</span>
+              <a href={`mailto:${site.email}`}>{site.email}</a>
+            </li>
+          )}
+          {site.phone && (
+            <li className="bg-stripes-blue">
+              <span>Телефон</span>
+              <a href={`tel:${site.phone.replace(/[^+\d]/g, "")}`}>{site.phone}</a>
+            </li>
+          )}
         </ul>
         <div className="contacts__form">
           <h2>Задать вопрос</h2>

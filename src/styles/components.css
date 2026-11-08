@@ -196,6 +196,10 @@ html { scrollbar-color: var(--blue-300) var(--blue-100); }
 .footer__giant-wrap { overflow: hidden; padding-inline: var(--gutter); }
 .footer__giant-wrap a { display: block; transition: transform .5s cubic-bezier(.2,.8,.3,1.2); }
 .footer__giant-wrap a:hover { transform: translateY(-6px) rotate(-.6deg); }
+/* буквы логотипа в подвале выезжают снизу по одной (прячем только при включённом JS) */
+.flogo__l { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .8s cubic-bezier(.2,.9,.3,1.25), opacity .45s ease; transition-delay: calc(var(--i) * 120ms); }
+.js .flogo:not(.is-in) .flogo__l { transform: translateY(115%) rotate(6deg); opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .flogo__l { transition: none; } .js .flogo:not(.is-in) .flogo__l { transform: none; opacity: 1; } }
 .footer__lead { max-width: 320px; color: var(--cream-300); }
 .footer__lead .script { color: var(--caramel-200); font-weight: 800; }
 .footer h3 {
@@ -256,6 +260,11 @@ html { scrollbar-color: var(--blue-300) var(--blue-100); }
   padding: 4px 10px;
   border-radius: 999px;
 }
+.pcard__multi {
+  position: absolute; top: 6px; right: 6px; background: var(--blue-200); color: var(--choc);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px;
+}
+.pcard--simple .pcard__multi { top: 12px; right: 12px; }
 .pcard__name { font-family: var(--ff-heading); font-size: 20px; font-weight: 800; line-height: 1.15; letter-spacing: -0.01em; }
 .pcard__meta { font-size: 13px; color: var(--muted); }
 .pcard__price { font-weight: 700; margin-top: 4px; }
@@ -335,6 +344,17 @@ html { scrollbar-color: var(--blue-300) var(--blue-100); }
 }
 .radio.is-active { border-color: var(--blue-400); background: var(--blue-100); }
 .radio small { display: block; color: var(--muted); font-size: 12px; }
+/* город с подсказками СДЭК и список пунктов выдачи */
+.city-field { position: relative; }
+.city-field > label { font-size: 13px; font-weight: 700; }
+.suggest { position: absolute; z-index: 20; top: 100%; left: 0; right: 0; margin: 4px 0 0; padding: 6px; list-style: none; background: #fff; border: 1.5px solid var(--blue-400); border-radius: 14px; box-shadow: 0 12px 30px rgb(74 46 34 / .12); max-height: 260px; overflow: auto; }
+.suggest button { display: block; width: 100%; text-align: left; padding: 8px 10px; border: 0; border-radius: 10px; background: none; font: inherit; color: inherit; cursor: pointer; }
+.suggest button:hover, .suggest button:focus-visible { background: var(--blue-100); outline: none; }
+.points { list-style: none; margin: 8px 0 0; padding: 0; max-height: 300px; overflow: auto; display: grid; gap: 6px; }
+.point { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1.5px solid var(--line, #e6dccd); border-radius: 12px; cursor: pointer; font-size: 14px; }
+.point.is-active { border-color: var(--blue-400); background: var(--blue-100); }
+.point input { margin-top: 3px; accent-color: var(--choc); }
+.point small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
 .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin-bottom: 10px; }
 .check input { margin-top: 4px; accent-color: var(--choc); }
 .error { color: var(--bordeaux); font-size: 14px; margin-top: 10px; }
@@ -572,3 +592,22 @@ html { scrollbar-color: var(--blue-300) var(--blue-100); }
 
 /* плашка «демо» на GitHub Pages */
 .demo-badge { position: fixed; z-index: 90; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; background: var(--choc); color: var(--paper); font: 600 12px/1.2 var(--ff-body); opacity: .88; pointer-events: none; white-space: nowrap; max-width: calc(100vw - 24px); overflow: hidden; text-overflow: ellipsis; }
+
+/* товар из слоёв: детали на прозрачном фоне одного размера, каждая красится отдельно */
+.layered { position: relative; display: block; width: 76%; }
+.layered .layered__top { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* заглушка товара без фото */
+.photo-soon { display: grid !important; place-items: center; align-content: center; gap: 8px; opacity: .55; width: 100%; height: 100%; }
+.photo-soon img { width: 46%; height: auto; }
+.photo-soon small { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+
+/* компактный выбор цветов, когда деталей много (наборы Minies, большие стойки) */
+.zone-list { display: grid; gap: 6px; }
+.zone-row { display: grid; grid-template-columns: 18px 1fr auto minmax(140px, 40%); gap: 10px; align-items: center; font-size: 14px; }
+.zone-row > select:first-of-type:not(:last-child) { min-width: 96px; }
+.zone-row i { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgb(74 46 34 / .25); }
+.zone-row select { padding: 7px 10px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: #fff; font: inherit; }
+/* конструктор стоек: сборка сверху вниз */
+.tier-list { list-style: none; margin: 10px 0 14px; padding: 0; display: grid; gap: 6px; }
+.tier-list li { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 10px; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: #fff; }

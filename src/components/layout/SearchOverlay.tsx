@@ -10,7 +10,7 @@ import { formatPrice } from "@/lib/format";
 
 type Hit = { slug: string; name: string; short: string; price: number | null; image: string | null };
 
-const hints = ["Fleur", "Bonbon", "торт", "ночник", "стенд", "Хэллоуин"];
+const hints = ["Fleur", "Bonbon", "торт", "вафля", "стенд", "Хэллоуин"];
 
 /** Поиск из шапки: подсказки сразу при вводе, Enter — весь список в каталоге */
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {

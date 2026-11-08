@@ -1,5 +1,6 @@
 import { crown, homeExtras, legs, marketBases, marketPodiums, maxPodiums, podiums, stackableLegs } from "@/data/parts";
-import { logoPrice, type Product } from "@/data/products";
+import { validateStand } from "@/data/market-rules";
+import { effectivePrice, logoCost, type Product } from "@/data/products";
 
 /**
  * Что именно лежит в корзине — без цены. По этой «ссылке» сервер сам пересчитывает цену,
@@ -14,11 +15,15 @@ export class PriceError extends Error {}
 
 /** Цена одного товара из каталога с учётом размера и логотипа */
 export function productUnitPrice(p: Product, ref: Extract<ItemRef, { kind: "product" }>): number {
-  if (p.price === null) throw new PriceError(`«${p.name}» — цена по запросу, оформите заявку`);
+  const price = effectivePrice(p);
+  if (price === null) throw new PriceError(`«${p.name}» — цена по запросу, оформите заявку`);
   const option = ref.option ? p.options?.find((o) => o.id === ref.option) : undefined;
   if (ref.option && !option) throw new PriceError(`У «${p.name}» нет размера ${ref.option}`);
-  const base = option?.price ?? p.price;
-  const logo = ref.logo && p.logoAddon && option ? logoPrice(option.label) : 0;
+  const base = option?.price ?? price;
+  if (p.orderVia === "direct") throw new PriceError(`«${p.name}» заказывается через личные сообщения`);
+  const offer = logoCost(p, option);
+  if (ref.logo && offer === null) throw new PriceError(`У «${p.name}»${option ? ` (${option.label})` : ""} логотип не делается`);
+  const logo = ref.logo && offer !== null ? offer : 0;
   return base + logo;
 }
 
@@ -48,6 +53,8 @@ export function marketBuildPrice(ref: Extract<ItemRef, { kind: "market" }>): num
   const base = marketBases.find((b) => b.id === ref.base);
   if (!base) throw new PriceError("Неизвестная база");
   if (ref.podiums.length > maxPodiums(base)) throw new PriceError("Слишком много подиумов для этой базы");
+  const problem = validateStand(base.id, Object.fromEntries(marketPodiums.map((p) => [p.id, p.name])), ref.podiums, ref.crown);
+  if (problem) throw new PriceError(problem);
   const sum = ref.podiums.reduce((s, id) => {
     const p = marketPodiums.find((x) => x.id === id);
     if (!p) throw new PriceError("Неизвестный подиум");

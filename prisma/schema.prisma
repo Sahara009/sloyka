@@ -15,7 +15,7 @@ model Product {
   id          String   @id @default(cuid())
   slug        String   @unique
   name        String
-  line        String // home | classic | design | market | decor | art
+  line        String // home | market | podium | topper | wish
   kind        String // set | stand | part | base | podium | decor
   price       Int? // минимальная цена, null — по запросу
   short       String
@@ -134,16 +134,23 @@ model Order {
   packing         Json?
   weight          Int?
   comment         String?
+  /// промокод заказа и телефон цифрами (последние 10) — промокод действует 1 раз на телефон / email
+  promoCode       String?
+  phoneDigits     String?
   amount          Int // сумма товаров, ₽ — пересчитана на сервере
-  deliveryPrice   Int?
-  paymentId       String? // id платежа в ЮKassa / PaymentId Т-Банка
-  paymentProvider String? // yookassa | tbank
+  deliveryPrice   Int? // доставка СДЭК, ₽ — входит в оплату (к оплате: amount + deliveryPrice)
+  deliveryPoint   String? // код пункта выдачи СДЭК
+  paymentId       String? // id платежа в ЮKassa
+  paymentProvider String? // yookassa
+  paymentStatus   String? // pending | succeeded | canceled — как в ЮKassa
+  refunded        Int         @default(0) // сколько вернули покупателю, ₽
   trackNumber     String?
   items           OrderItem[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
   @@index([status, createdAt])
+  @@index([promoCode, phoneDigits])
 }
 
 model OrderItem {

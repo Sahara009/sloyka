@@ -19,10 +19,12 @@ export function shade(hex: string, amount: number): string {
 export const site = {
   name: "Sloyka",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  // TODO: заменить на реальные контакты заказчика
-  telegram: "https://t.me/",
-  instagram: "https://instagram.com/",
-  email: "hello@example.ru",
-  phone: "+7 (000) 000-00-00",
-  city: "Россия",
+  // Контакты от заказчика (27.10, email — 03.11). Телефона не будет.
+  telegram: "https://t.me/sloykahome?direct",
+  instagram: "https://instagram.com/sloyka.home",
+  email: "sloyka.home@mail.ru", // для предложений и обращений (заказчик, 03.11)
+  phone: "",
+  city: "Санкт-Петербург",
+  /** Продавец — для подвала, оферты и согласия на обработку данных */
+  seller: { name: "Максимов Сергей Игоревич", inn: "780250001600", status: "Самозанятый" },
 };

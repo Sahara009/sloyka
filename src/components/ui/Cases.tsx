@@ -14,7 +14,7 @@ export function Cases({ limit }: { limit?: number }) {
           <h2>
             Торты <span className="script">на наших</span> подставках
           </h2>
-          <Link href="/catalog?line=classic" className="more">
+          <Link href="/catalog?line=podium" className="more">
             Classic Cakestand →
           </Link>
         </Reveal>

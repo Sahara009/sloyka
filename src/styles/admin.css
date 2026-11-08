@@ -49,3 +49,7 @@
   .admin-grid { grid-template-columns: 1fr; }
   .admin-table { display: block; overflow-x: auto; }
 }
+.admin-ok { color: #2f6b3a; font-size: 14px; }
+.admin-refund { margin-top: 8px; border: 1px dashed var(--line, #d9cfc0); border-radius: 12px; padding: 10px 14px; }
+.admin-refund summary { cursor: pointer; font-weight: 700; }
+.admin-refund .admin-form { margin-top: 10px; }

@@ -14,14 +14,15 @@ import { formatPrice } from "@/lib/format";
 export const metadata: Metadata = {
   title: "Для бизнеса",
   description: "Стенды для маркетов, вывески, тейблтенты и логотипы для кофеен и кондитерских.",
+  alternates: { canonical: "/business" },
 };
 
 export const revalidate = 60;
 
 export default async function BusinessPage() {
   const products = await getProducts();
-  const decor = products.filter((p) => p.line === "decor");
-  const stands = products.filter((p) => p.line === "market" && p.kind === "set");
+  const decor = products.filter((p) => p.series === "decor");
+  const stands = products.filter((p) => p.line === "market" && p.kind === "set" && !p.promo);
 
   return (
     <>

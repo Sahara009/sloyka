@@ -3,16 +3,19 @@ import { notFound } from "next/navigation";
 import { db, hasDb } from "@/lib/server/db";
 import { formatPrice } from "@/lib/format";
 import { boxes as boxList } from "@/data/shipping";
-import { updateOrder, updateOrderPacking } from "../../../actions";
-import { dateFmt, deliveryLabels, statusLabels } from "../../../labels";
+import { refundOrder, updateOrder, updateOrderPacking } from "../../../actions";
+import { dateFmt, deliveryLabels, paymentLabels, statusLabels } from "../../../labels";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ refund?: string }> };
 
-export default async function AdminOrder({ params }: Props) {
+export default async function AdminOrder({ params, searchParams }: Props) {
   if (!hasDb) notFound();
   const { id } = await params;
+  const { refund: refundMsg } = await searchParams;
   const order = await db().order.findUnique({ where: { id }, include: { items: true } });
   if (!order) notFound();
+  const total = order.amount + (order.deliveryPrice ?? 0);
+  const refundLeft = total - order.refunded;
 
   return (
     <>
@@ -42,9 +45,42 @@ export default async function AdminOrder({ params }: Props) {
             </tbody>
           </table>
           <p className="admin-total">
-            Итого: <b>{formatPrice(order.amount)}</b>
-            {order.deliveryPrice ? ` + доставка ${formatPrice(order.deliveryPrice)}` : ""}
+            Товары: {formatPrice(order.amount)}
+            {order.deliveryPrice ? ` + доставка СДЭК ${formatPrice(order.deliveryPrice)}` : ""} · к оплате: <b>{formatPrice(total)}</b>
           </p>
+
+          <h2>Оплата</h2>
+          <p>
+            {order.paymentStatus ? paymentLabels[order.paymentStatus] ?? order.paymentStatus : "оплата не создавалась"}
+            {order.refunded > 0 && <> · возвращено {formatPrice(order.refunded)}</>}
+            {order.paymentId && <span className="muted small"><br />ЮKassa: {order.paymentId}</span>}
+          </p>
+          {refundMsg && (
+            <p className={refundMsg.startsWith("ok") ? "admin-ok" : "error"}>
+              {refundMsg === "ok-full" ? "Деньги возвращены полностью, заказ отменён." : refundMsg === "ok" ? "Частичный возврат отправлен." : refundMsg}
+            </p>
+          )}
+          {order.paymentStatus === "succeeded" && refundLeft > 0 && (
+            <details className="admin-refund">
+              <summary>Вернуть деньги</summary>
+              <form action={refundOrder} className="admin-form">
+                <input type="hidden" name="id" value={order.id} />
+                <label className="field">
+                  <span>Сумма, ₽ (можно частично, максимум {formatPrice(refundLeft)})</span>
+                  <input name="amount" type="number" min={1} max={refundLeft} defaultValue={refundLeft} required />
+                </label>
+                <label className="field">
+                  <span>Причина (увидит покупатель в чеке)</span>
+                  <input name="reason" placeholder="Например: отмена заказа" />
+                </label>
+                <label className="check">
+                  <input type="checkbox" name="confirm" required />
+                  <span>Подтверждаю возврат — деньги уйдут покупателю, отменить нельзя</span>
+                </label>
+                <button className="btn btn--sm">Вернуть через ЮKassa</button>
+              </form>
+            </details>
+          )}
         </section>
 
         <section className="admin-box">

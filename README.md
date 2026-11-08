@@ -1,6 +1,6 @@
 # Sloyka — сайт (Next.js)
 
-Сайт Sloyka: десертные столики Sloyka Home, подставки Classic Cakestand, Design Stand и подиумы, стенды Sloyka Market, Art Decor Waffle's, вывески. Каталог, конструктор сборки, корзина с оплатой Т-Банк (карта и СБП) и доставкой СДЭК и Ozon.
+Сайт Sloyka: десертные столики Sloyka Home, подставки Classic Cakestand, Design Stand и подиумы, стенды Sloyka Market, Art Decor Waffle's, вывески. Каталог, конструктор сборки, корзина с оплатой через ЮKassa (карта и СБП) и доставкой СДЭК и Ozon.
 
 ## Запуск
 
@@ -41,7 +41,7 @@ src/
     preloader/          прелоадер «глазурь» (стекающие слои), генератор подтёков drip.ts
     ui/                 Shape (маски), Photo, Reveal (появление при скролле), Drip, Ticker, Swatches, формы
   data/                 палитра (25 цветов), детали и цены, товары, юр. тексты
-  lib/                  форматирование, интеграции (tbank.ts, delivery.ts)
+  lib/                  форматирование, интеграции (yookassa.ts, delivery.ts)
   styles/               tokens.css (цвета и шрифты), patterns.css (полоски, клетка, фестоны, маски)
 public/products/        фото товаров без фона (WebP), вырезаны со скринов сторис
 public/photos/          интерьерные фото и кадры из инстаграма
@@ -84,17 +84,20 @@ public/shapes/          SVG-формы для масок: quatrefoil, clover, sc
 | Коробки S/M/L, вес и габариты деталей, зоны Ozon/WB | `src/data/shipping.ts` (черновые цифры) → модели `Box`, `DeliveryZone`, поля веса у `Part`/`Product` |
 | Подбор коробки на заказ | `src/lib/shipping.ts → pack()`: самая маленькая, куда всё влезает; ножки и вкладыши «вкладываются» |
 | Расчёт для корзины | `POST /api/delivery/quote` — СДЭК точно по API (если есть ключи), Ozon/WB — вилка «≈ от–до» по городу |
+| Город и пункты выдачи СДЭК | `GET /api/delivery/cities?q=` (подсказки), `GET /api/delivery/points?city=код` — список пунктов в корзине, без карты |
+| Доставка СДЭК в оплате | `/api/orders` сам пересчитывает доставку по коду города и коробкам и прибавляет к платежу |
 | Коробку в заказе можно поменять | админка → заказ → «Упаковка» |
-| Оплата | `src/lib/integrations/payments.ts`: ЮKassa (для самозанятых) или Т-Банк, переключатель `PAYMENT_PROVIDER` |
-| Подтверждение оплаты ЮKassa | `POST /api/payments/yookassa` (статус перепроверяется запросом в ЮKassa) |
+| Оплата | `src/lib/integrations/payments.ts`: только ЮKassa (самозанятый), ключи `YOOKASSA_SHOP_ID` / `YOOKASSA_SECRET_KEY` |
+| Подтверждение оплаты ЮKassa | `POST /api/payments/yookassa`: payment.succeeded → «Оплачен», payment.canceled, refund.succeeded (статус перепроверяется запросом в ЮKassa). `GET ?id=` — статус для страницы возврата `/cart?paid=` |
+| Возврат денег | админка → заказ → «Вернуть деньги» (полный или частичный, через ЮKassa) |
+| Уведомления в Telegram | `src/lib/integrations/telegram.ts`: новый заказ, оплата, отмена, возврат, заявка. `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`; id получателей: `node --env-file=.env.local scripts/telegram-chats.mjs` |
 
-Покупатель оплачивает товары; доставку менеджер подтверждает после взвешивания (на сайте она с «≈»).
+Покупатель оплачивает товары и доставку СДЭК одним платежом. Ozon/WB — пока «≈», оплачиваются отдельно. После изменения `prisma/schema.prisma` (новые поля заказа) выполнить `npx prisma generate`, а с базой — `npm run db:push`.
 
 ## Что ещё нужно от заказчика (TODO в коде)
 
 - Фото каждой детали в белом (см. «Как снимать детали») и, по желанию, фото в тёмных цветах.
 - Размеры коробок, вес и габариты деталей в упаковке, вилки Ozon/WB по зонам (`src/data/shipping.ts`).
-- Ключи ЮKassa (самозанятый) и СДЭК.
 
 - Исходник логотипа (SVG/AI/PDF). Сейчас логотип обведён в вектор с аватарки (`public/logo.svg`, анимированная версия — `components/ui/AnimatedLogo.tsx`), края местами неидеальные.
 - Оригиналы фото товаров (сейчас вырезаны со скринов сторис).

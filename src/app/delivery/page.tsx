@@ -4,7 +4,8 @@ import { Reveal } from "@/components/ui/Reveal";
 
 export const metadata: Metadata = {
   title: "Доставка и оплата",
-  description: "Оплата картой и через СБП, доставка СДЭК и Ozon по всей России.",
+  description: "Оплата картой и через СБП (ЮKassa), доставка СДЭК и Ozon по всей России.",
+  alternates: { canonical: "/delivery" },
 };
 
 export default function DeliveryPage() {
@@ -23,7 +24,7 @@ export default function DeliveryPage() {
             <ul>
               <li>Банковской картой на сайте</li>
               <li>Через СБП — по QR-коду или в приложении банка</li>
-              <li>Платёж проходит через защищённую страницу Т-Банка</li>
+              <li>Платёж проходит через защищённую страницу ЮKassa</li>
               <li>Чек приходит на email, указанный при заказе</li>
             </ul>
           </div>

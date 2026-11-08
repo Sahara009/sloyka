@@ -1,73 +1,87 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Photo } from "@/components/ui/Photo";
 import { Reveal } from "@/components/ui/Reveal";
-import { SearchIcon } from "@/components/ui/Icons";
-import { kindTitles, lineNotes, lineTitles, type Kind, type Line, type Product } from "@/data/products";
+import { ArrowIcon, SearchIcon } from "@/components/ui/Icons";
+import { categories, categoriesOf } from "@/data/categories";
+import { effectivePrice, lineNotes, lineTitles, promoActive, type Line, type Product } from "@/data/products";
 import { matchProduct } from "@/lib/search";
 import { ProductCard } from "./ProductCard";
 
-const lineOrder: Line[] = ["home", "classic", "design", "market", "art", "toppers", "decor"];
+const lineOrder: Line[] = ["podium", "market", "home", "topper", "wish"];
+type Tab = "all" | "promo" | Line;
 
 /** Картинка и цвет плитки для каждой линейки */
-const lineLook: Record<"all" | Line, { img?: string; tone: string }> = {
+const lineLook: Record<Tab, { img?: string; tone: string }> = {
   all: { tone: "var(--blue-200)" },
-  home: { img: "/products/set-fleur-pumpkin-muff.webp", tone: "var(--blue-100)" },
-  classic: { img: "/products/classic-muffin.webp", tone: "var(--cream)" },
-  design: { img: "/products/design-milano.webp", tone: "var(--sage-100)" },
-  market: { img: "/products/stand-paris.webp", tone: "var(--blush-100)" },
-  art: { img: "/products/waffle-round-raspberry.webp", tone: "var(--cream)" },
-  toppers: { img: "/photos/toppers-ghosts.webp", tone: "var(--blue-100)" },
-  decor: { img: "/products/decor-sign.webp", tone: "var(--sage-100)" },
+  // рендеры и фото заказчика (08.11)
+  promo: { img: "/products/render/fleur-moti.webp", tone: "var(--blush-100)" },
+  home: { img: "/photos/waffle-desk-clean-raspberry.webp", tone: "var(--cream)" },
+  market: { img: "/products/render/stand-semiramis.webp", tone: "var(--blush-100)" },
+  podium: { img: "/products/render/bonbon-stand.webp", tone: "var(--blue-100)" },
+  topper: { img: "/photos/topper-numbers-tray.webp", tone: "var(--blue-100)" },
+  wish: { img: "/photos/keychain-macaron-stand.webp", tone: "var(--sage-100)" },
 };
 
-const kindOrder: Kind[] = ["set", "stand", "base", "podium", "part", "decor"];
 type Sort = "default" | "cheap" | "expensive";
 
+/**
+ * Каталог: плитки линеек (+ «Акции»), внутри линейки — чипы категорий по структуре заказчика.
+ * Перед готовыми сборками (Dessert Stand, Стойки) — блок «Собери свой» со ссылкой в конструктор.
+ * Адрес: /catalog?line=podium&cat=dessert, /catalog?line=promo
+ */
 export function CatalogView({ products }: { products: Product[] }) {
-  const [line, setLine] = useState<"all" | Line>("all");
-  const [kind, setKind] = useState<"all" | Kind>("all");
+  const [tab, setTab] = useState<Tab>("all");
+  const [cat, setCat] = useState<string>("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<Sort>("default");
 
-  // ?line=home из ссылок на главной, ?q= из поиска в шапке
+  // ?line=…&cat=… из ссылок на главной, ?q= из поиска в шапке
   useEffect(() => {
     const s = new URLSearchParams(window.location.search);
     const p = s.get("line");
-    if (p && (lineOrder as string[]).includes(p)) setLine(p as Line);
+    if (p && (p === "promo" || (lineOrder as string[]).includes(p))) setTab(p as Tab);
+    if (s.get("cat")) setCat(s.get("cat")!);
     if (s.get("q")) setQ(s.get("q")!);
   }, []);
 
-  const inLine = (p: Product) => line === "all" || p.line === line;
+  // наборы из разных линеек (promoOnly) — только во «Всех товарах» и «Акциях»
+  const inLine = (p: Product, line: Tab) => p.line === line && !p.promoOnly;
+  const inTab = (p: Product) => tab === "all" || (tab === "promo" ? promoActive(p) : inLine(p, tab));
+  const lineCats = tab === "all" || tab === "promo" ? [] : categories[tab].filter((c) => products.some((p) => inLine(p, tab) && categoriesOf(p).includes(c.id)));
+  const activeCat = lineCats.find((c) => c.id === cat);
+
   const list = useMemo(() => {
-    const l = products.filter((p) => inLine(p) && (kind === "all" || p.kind === kind) && matchProduct(p, q));
+    const l = products.filter((p) => inTab(p) && (!activeCat || categoriesOf(p).includes(activeCat.id)) && matchProduct(p, q));
     if (sort === "default") return l;
-    const price = (p: Product) => p.price ?? Number.MAX_SAFE_INTEGER;
+    const price = (p: Product) => effectivePrice(p) ?? Number.MAX_SAFE_INTEGER;
     return [...l].sort((a, b) => (sort === "cheap" ? price(a) - price(b) : price(b) - price(a)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [line, kind, q, sort, products]);
+  }, [tab, cat, q, sort, products]);
 
-  const kinds = kindOrder.filter((k) => products.some((p) => inLine(p) && p.kind === k));
+  const tabs: Tab[] = ["all", ...(products.some((p) => promoActive(p)) ? (["promo"] as Tab[]) : []), ...lineOrder];
+  const countOf = (id: Tab) => (id === "all" ? products.length : products.filter((p) => (id === "promo" ? promoActive(p) : inLine(p, id))).length);
 
   return (
     <div className="catalog">
       <div className="lines-filter" role="tablist" aria-label="Линейки">
-        {(["all", ...lineOrder] as const).map((id) => {
+        {tabs.map((id) => {
           const look = lineLook[id];
-          const count = id === "all" ? products.length : products.filter((p) => p.line === id).length;
+          const count = countOf(id);
           if (!count) return null;
           return (
             <button
               key={id}
               type="button"
               role="tab"
-              aria-selected={line === id}
-              className={`line-tile ${line === id ? "is-active" : ""}`}
+              aria-selected={tab === id}
+              className={`line-tile ${tab === id ? "is-active" : ""} ${id === "promo" ? "line-tile--promo" : ""}`}
               style={{ ["--tile" as string]: look.tone }}
               onClick={() => {
-                setLine(id);
-                setKind("all");
+                setTab(id);
+                setCat("all");
               }}
             >
               <span className={`line-tile__pic ${id === "all" ? "bg-stripes-blue" : ""}`}>
@@ -75,8 +89,8 @@ export function CatalogView({ products }: { products: Product[] }) {
                 {id === "all" && <b>{count}</b>}
               </span>
               <span className="line-tile__text">
-                {id === "all" ? "Все товары" : lineTitles[id]}
-                <small>{id === "all" ? "Весь каталог" : lineNotes[id]}</small>
+                {id === "all" ? "Все товары" : id === "promo" ? "Акции" : lineTitles[id]}
+                <small>{id === "all" ? "Весь каталог" : id === "promo" ? "Спеццены и наборы" : lineNotes[id]}</small>
               </span>
               {id !== "all" && <sup>{count}</sup>}
             </button>
@@ -85,20 +99,24 @@ export function CatalogView({ products }: { products: Product[] }) {
       </div>
 
       <div className="catalog__bar">
-        <div className="chips chips--soft">
-          <button type="button" className={`chip ${kind === "all" ? "is-active" : ""}`} onClick={() => setKind("all")}>
-            Всё
-          </button>
-          {kinds.map((k) => (
-            <button key={k} type="button" className={`chip ${kind === k ? "is-active" : ""}`} onClick={() => setKind(k)}>
-              {kindTitles[k]}
+        {lineCats.length > 0 ? (
+          <div className="chips chips--soft">
+            <button type="button" className={`chip ${!activeCat ? "is-active" : ""}`} onClick={() => setCat("all")}>
+              Всё
             </button>
-          ))}
-        </div>
+            {lineCats.map((c) => (
+              <button key={c.id} type="button" className={`chip ${activeCat?.id === c.id ? "is-active" : ""}`} onClick={() => setCat(c.id)}>
+                {c.title}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <span />
+        )}
         <div className="catalog__tools">
           <label className="search-field">
             <SearchIcon />
-            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Найти: Fleur, торт, ночник…" aria-label="Поиск по каталогу" />
+            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Найти: Fleur, торт, вафля…" aria-label="Поиск по каталогу" />
           </label>
           <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="sort-select" aria-label="Сортировка">
             <option value="default">Сначала популярные</option>
@@ -108,9 +126,21 @@ export function CatalogView({ products }: { products: Product[] }) {
         </div>
       </div>
 
+      {activeCat?.builder && (
+        <Link href={activeCat.builder.href} className="builder-cta bg-stripes-blue">
+          <span>
+            <b>{activeCat.builder.title}</b>
+            <small>{activeCat.builder.text}</small>
+          </span>
+          <span className="btn btn--sm">
+            В конструктор <ArrowIcon />
+          </span>
+        </Link>
+      )}
+
       <div className="grid-products grid-products--catalog">
         {list.map((p, i) => (
-          <Reveal key={`${line}-${kind}-${p.slug}`} delay={(i % 4) * 60}>
+          <Reveal key={`${tab}-${cat}-${p.slug}`} delay={(i % 4) * 60}>
             <ProductCard product={p} index={i} simple />
           </Reveal>
         ))}
@@ -119,7 +149,15 @@ export function CatalogView({ products }: { products: Product[] }) {
         <div className="empty-state">
           <p className="script">Ничего не нашлось</p>
           <p className="muted">Попробуйте другое слово или напишите нам — соберём под заказ.</p>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setQ(""); setLine("all"); setKind("all"); }}>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => {
+              setQ("");
+              setTab("all");
+              setCat("all");
+            }}
+          >
             Сбросить фильтры
           </button>
         </div>

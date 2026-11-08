@@ -1,7 +1,7 @@
 // Комплектующие для конструктора. Цены и правила — из сторис Sloyka.
 // Когда появится бэкенд и админ-панель, эти данные переедут в базу.
 
-/* ---------- Sloyka Home: десертные столики ---------- */
+/* ---------- Sloyka Podium: модульные десертные столики ---------- */
 
 export type PodiumId = "bonbon" | "fleur" | "cappottina";
 export type LegId = "piccola" | "pumpkin" | "souffle" | "muff" | "grande";
@@ -25,10 +25,11 @@ export const legs: (HomePart<LegId> & { height: number; doubleSided: boolean })[
   { id: "pumpkin", name: "Pumpkin", price: 900, height: 8, doubleSided: true, note: "8 см, двустороннее крепление" },
   { id: "souffle", name: "Souffle", price: 1000, height: 10, doubleSided: false, note: "10 см" },
   { id: "muff", name: "Muff", price: 800, height: 12, doubleSided: false, note: "12 см" },
-  { id: "grande", name: "Grande", price: 1300, height: 14, doubleSided: false, note: "14 см, совместима с Attico" },
+  { id: "grande", name: "Grande", price: 1300, height: 14, doubleSided: false, note: "14 см" },
 ];
 
-export const homeExtras: (HomePart<HomeExtraId> & { forPodium: PodiumId; requiresLeg?: LegId })[] = [
+/** hidden — деталь не показываем ни в каталоге, ни в конструкторе (Attico убран по решению заказчика 27.10, остаётся только внутри сборок Palazzo и Dei Dolci) */
+export const homeExtras: (HomePart<HomeExtraId> & { forPodium: PodiumId; requiresLeg?: LegId; hidden?: boolean })[] = [
   { id: "nuts", name: "Вкладыш Nuts", price: 800, forPodium: "fleur", note: "Для орешков" },
   { id: "flower", name: "Вкладыш Flower", price: 750, forPodium: "fleur", note: "Для шоколадных яиц, трюфелей, конфет" },
   { id: "honey", name: "Вкладыш Honey", price: 700, forPodium: "fleur", note: "Для макаронс, моти, десертов до 5 см" },
@@ -38,6 +39,7 @@ export const homeExtras: (HomePart<HomeExtraId> & { forPodium: PodiumId; require
     price: 1000,
     forPodium: "cappottina",
     requiresLeg: "grande",
+    hidden: true,
     note: "Дополнительный подиум — столик становится фруктовницей. Только с ножкой Grande",
   },
 ];
@@ -64,8 +66,8 @@ export const marketBases: MarketBase[] = [
     name: "Париж",
     price: 1000,
     levels: 3,
-    note: "Трёхуровневая база с вашим логотипом",
-    specs: ["Глубина 21 см", "Высота 5,5 / 11 / 16,5 см", "Комплект: 2 ножки, 2 логотипа"],
+    note: "Трёхуровневая база с вашим логотипом в подарок",
+    specs: ["Глубина 21 см", "Высота 5,5 / 11 / 16,5 см", "Комплект: 2 ножки, 2 логотипа", "Логотип — в подарок; можно без него: останется вырез под наклейку, цена та же"],
   },
   {
     id: "babylon",
@@ -77,25 +79,26 @@ export const marketBases: MarketBase[] = [
   },
 ];
 
+// Размеры по матрице 03.11: Д × Г × В общие, в скобках — полезная зона (у Ложе и Патио — одна секция)
 export const marketPodiums: MarketPodium[] = [
-  { id: "cascade-1", name: "Каскад-1", price: 700, group: "Каскад", specs: ["25 × 8 см, высота 3 см"] },
-  { id: "cascade-2", name: "Каскад-2", price: 700, group: "Каскад", specs: ["25 × 8 см, высота 4 см"] },
-  { id: "cascade-3", name: "Каскад-3", price: 700, group: "Каскад", specs: ["25 × 8 см, высота 5 см"] },
-  { id: "tribune-2", name: "Трибуна-2", price: 900, group: "Трибуна", specs: ["25 × 7 см, высота 9,5 см"] },
-  { id: "tribune-3", name: "Трибуна-3", price: 1000, group: "Трибуна", specs: ["25 × 7 см, высота 9,5 см"] },
-  { id: "amphitheatre", name: "Амфитеатр", price: 950, group: "Трибуна", specs: ["25 × 7 см, секция 6 × 3 × 2 см"] },
-  { id: "agora", name: "Агора", price: 800, group: "Трибуна", specs: ["25 × 7 см, секция 4 × 3 × 1,5 см"] },
-  { id: "diadem", name: "Диадема", price: 1250, group: "Диадема", specs: ["Подиум + вставка-крючки + вставка для пусетов"] },
-  { id: "marseille-21", name: "Марсель-21", price: 400, group: "Марсель", specs: ["21 × 8 см"] },
-  { id: "marseille-25", name: "Марсель-25", price: 500, group: "Марсель", specs: ["25 × 8 см"] },
-  { id: "marquise-21", name: "Маркиза-21", price: 500, group: "Маркиза", specs: ["21 × 7,5 см"] },
-  { id: "marquise-25", name: "Маркиза-25", price: 600, group: "Маркиза", specs: ["25 × 7,5 см"] },
-  { id: "loge-1", name: "Ложе-1", price: 600, group: "Ложе", specs: ["25 × 7 см, 1 секция"] },
-  { id: "loge-2", name: "Ложе-2", price: 600, group: "Ложе", specs: ["25 × 7 см, 2 секции"] },
-  { id: "loge-3", name: "Ложе-3", price: 600, group: "Ложе", specs: ["25 × 7 см, 3 секции"] },
-  { id: "patio-1", name: "Патио-1", price: 600, group: "Патио", specs: ["25 × 7 см, 1 секция"] },
-  { id: "patio-2", name: "Патио-2", price: 600, group: "Патио", specs: ["25 × 7 см, 2 секции"] },
-  { id: "patio-3", name: "Патио-3", price: 600, group: "Патио", specs: ["25 × 7 см, 3 секции"] },
+  { id: "cascade-1", name: "Каскад-1", price: 700, group: "Каскад", specs: ["25 × 8 × 3 см (полезная зона 24,5 × 2,5 × 1,5 см)", "Вынос 1 см"] },
+  { id: "cascade-2", name: "Каскад-2", price: 700, group: "Каскад", specs: ["25 × 8 × 4 см (полезная зона 24,5 × 2,5 × 1,5 см)", "Вынос 1 см"] },
+  { id: "cascade-3", name: "Каскад-3", price: 700, group: "Каскад", specs: ["25 × 8 × 5 см (полезная зона 24,5 × 2,5 × 1,5 см)", "Вынос 1 см"] },
+  { id: "tribune-2", name: "Трибуна-2", price: 900, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 24,5 × 3 × 2 см)", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
+  { id: "tribune-3", name: "Трибуна-3", price: 1000, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 24,5 × 2,5 × 2 см)", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
+  { id: "amphitheatre", name: "Амфитеатр", price: 950, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 6 × 3 × 2 см)", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
+  { id: "agora", name: "Агора", price: 800, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 4 × 3 × 1,5 см)", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
+  { id: "diadem", name: "Диадема", price: 1250, group: "Диадема", specs: ["25 × 7 × 1,5 см", "Высота со вставкой-крючками 17,5 см, со вставкой для пусетов 13,5 см", "Подиум + вставка-крючки + вставка для пусетов", "Ставится только наверх, вместо короны"] },
+  { id: "marseille-21", name: "Марсель-21", price: 400, group: "Марсель", specs: ["21 × 8 × 0,5 см", "Вынос 1 см", "Только в комбо с Маркизой-21 и Марселем-21"] },
+  { id: "marseille-25", name: "Марсель-25", price: 500, group: "Марсель", specs: ["25 × 8 × 0,5 см", "Вынос 1 см"] },
+  { id: "marquise-21", name: "Маркиза-21", price: 500, group: "Маркиза", specs: ["21 × 7,5 × 3,5 см", "Свес 3 см, вынос 0,5 см", "Только в комбо с Маркизой-21 и Марселем-21"] },
+  { id: "marquise-25", name: "Маркиза-25", price: 600, group: "Маркиза", specs: ["25 × 7,5 × 3,5 см", "Свес 3 см, вынос 0,5 см"] },
+  { id: "loge-1", name: "Ложе-1", price: 600, group: "Ложе", specs: ["25 × 7 × 1,5 см (полезная зона 24,5 × 6,5 × 1 см)", "1 секция"] },
+  { id: "loge-2", name: "Ложе-2", price: 600, group: "Ложе", specs: ["25 × 7 × 1,5 см (полезная зона 12 × 6,5 × 1 см)", "2 секции"] },
+  { id: "loge-3", name: "Ложе-3", price: 600, group: "Ложе", specs: ["25 × 7 × 1,5 см (полезная зона 8 × 6,5 × 1 см)", "3 секции"] },
+  { id: "patio-1", name: "Патио-1", price: 600, group: "Патио", specs: ["25 × 7 × 2 см (полезная зона 24,5 × 6,5 × 1,5 см)", "1 секция"] },
+  { id: "patio-2", name: "Патио-2", price: 600, group: "Патио", specs: ["25 × 7 × 2 см (полезная зона 12 × 6,5 × 1,5 см)", "2 секции"] },
+  { id: "patio-3", name: "Патио-3", price: 600, group: "Патио", specs: ["25 × 7 × 2 см (полезная зона 8 × 6,5 × 1,5 см)", "3 секции"] },
 ];
 
 export const crown = {
