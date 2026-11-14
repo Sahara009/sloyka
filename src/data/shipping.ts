@@ -144,7 +144,7 @@ export const productWeights: Record<string, number> = {
   "base-paris": 115,
   "base-babylon": 103,
   "stand-leon": 560,
-  "wheel-carnival": 180,
+  "wheel-carnival": 200, // заказчик 13.11: ~190–200 г, берём верхнюю границу
 };
 
 /** Шкатулка Cachette в упаковке: 6 × 6 × 7 см + крышка до 3 см, + 1 см по сторонам (вес — пока примерно) */

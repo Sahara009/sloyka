@@ -44,9 +44,14 @@ export const srParts: Record<string, [number, number, number, number]> = {
   "diadem-pusety-r": [1026, 217, 191, 382],
   "diadem-chains-l": [788, 64, 227, 487],
   "diadem-chains-r": [1009, 114, 227, 488],
-  "crown-post": [669, 282, 578, 779],
-  "crown-cap1": [657, 179, 497, 268],
-  "crown-cap2": [741, 199, 497, 268],
+  "crown-post": [668, 284, 580, 780],
+  // маркиза — 6 полос слева направо (рендер заказчика 13.11): нечётные — цвет 1, чётные — цвет 2
+  "crown-s1": [661, 178, 162, 192],
+  "crown-s2": [745, 197, 162, 192],
+  "crown-s3": [829, 217, 163, 191],
+  "crown-s4": [913, 236, 163, 192],
+  "crown-s5": [997, 255, 163, 192],
+  "crown-s6": [1081, 274, 163, 192],
 };
 export const srSrc = (name: string) => `/products/stand/${name}.webp`;
 
@@ -91,7 +96,7 @@ export type StandSceneInput = {
   base: string;
   /** сверху вниз: [верхний ярус, …, ярус 1, приставной]; null — пусто */
   slots: (string | null)[];
-  colors: { legs: string; slots: string[]; logo?: string | null; crown?: { post: string; cap1: string; cap2: string } | null };
+  colors: { legs: string; slots: string[]; logo?: string | null; crown?: { post: string; cap1: string; cap2: string } | null; diadem?: { l: string; r: string } | null };
   inserts?: { l: DiademInsert; r: DiademInsert };
 };
 
@@ -120,6 +125,10 @@ export function standScene({ base, slots, colors, inserts }: StandSceneInput) {
 
   put("legs-l", b.L, colors.legs, sh);
   if (b.logoL && colors.logo) put("logo-l", b.logoL, colors.logo, sh);
+  // правая (передняя) боковина — под ярусами, чтобы штырьки не торчали поверх подиумов (заказчик, 11.11)
+  put("legs-r", b.R, colors.legs, neg);
+  if (b.logoR && colors.logo) put("logo-r", b.logoR, colors.logo, neg);
+  // корона: переходник надевается на обе боковины сверху, на него — верхний подиум; стойки сзади (заказчик, 11.11)
   if (colors.crown) put("crown", "crown-post", colors.crown.post, crownD);
   // ярусы: дальние (верхние) раньше, ближние позже
   for (let k = 0; k < levels; k++) {
@@ -133,15 +142,14 @@ export function standScene({ base, slots, colors, inserts }: StandSceneInput) {
     const col = colors.slots[k] ?? colors.legs;
     put(`s${k}`, `podium-${id}`, col, d);
     if (id === "diadem") {
-      put(`s${k}-l`, `diadem-${inserts?.l ?? "pusety"}-l`, col, d);
-      put(`s${k}-r`, `diadem-${inserts?.r ?? "chains"}-r`, col, d);
+      // вставки красятся отдельно от подиума (заказчик, 11.11)
+      put(`s${k}-l`, `diadem-${inserts?.l ?? "pusety"}-l`, colors.diadem?.l ?? col, d);
+      put(`s${k}-r`, `diadem-${inserts?.r ?? "chains"}-r`, colors.diadem?.r ?? col, d);
     }
   }
-  put("legs-r", b.R, colors.legs, neg);
-  if (b.logoR && colors.logo) put("logo-r", b.logoR, colors.logo, neg);
   if (colors.crown) {
-    put("cap1", "crown-cap1", colors.crown.cap1, crownD);
-    put("cap2", "crown-cap2", colors.crown.cap2, crownD);
+    // каждая следующая полоса перекрывает предыдущую (видим их правые торцы)
+    for (let i = 1; i <= 6; i++) put(`cap${i}`, `crown-s${i}`, i % 2 ? colors.crown.cap1 : colors.crown.cap2, crownD);
   }
   const extra = slots[levels];
   if (extra) {

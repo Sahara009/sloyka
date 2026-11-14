@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { contactLabels, contactLink, type ContactVia } from "@/lib/contact";
 import { notFound } from "next/navigation";
 import { db, hasDb } from "@/lib/server/db";
 import { formatPrice } from "@/lib/format";
@@ -91,6 +92,25 @@ export default async function AdminOrder({ params, searchParams }: Props) {
             <a href={`tel:${order.phone}`}>{order.phone}</a>
             <br />
             <a href={`mailto:${order.email}`}>{order.email}</a>
+            {order.contactVia && (
+              <>
+                <br />
+                <span className="muted">
+                  Удобнее: {contactLabels[order.contactVia as ContactVia] ?? order.contactVia}
+                  {order.contactHandle ? ` ${order.contactHandle}` : ""}
+                </span>
+              </>
+            )}
+          </p>
+          <p className="admin-inline">
+            {(Object.keys(contactLabels) as ContactVia[]).map((v) => {
+              const link = contactLink(v, order.phone, v === order.contactVia ? order.contactHandle : null);
+              return link ? (
+                <a key={v} className={`btn btn--sm${v === order.contactVia ? "" : " btn--ghost"}`} href={link} target="_blank" rel="noreferrer">
+                  {contactLabels[v]}
+                </a>
+              ) : null;
+            })}
           </p>
           <h2>Доставка</h2>
           <p>

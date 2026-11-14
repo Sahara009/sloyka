@@ -10,7 +10,7 @@ import { PriceError, unitPrice } from "@/lib/pricing";
 import { getProduct } from "@/lib/server/catalog";
 import { db, hasDb } from "@/lib/server/db";
 import { applyPromoCode } from "@/data/promocodes";
-import { MIN_ORDER_TOTAL } from "@/data/settings";
+import { GIFT_THRESHOLD, GIFTS, MIN_ORDER_TOTAL, type GiftId } from "@/data/settings";
 
 const refSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("product"), slug: z.string(), option: z.string().optional(), logo: z.boolean().optional() }),
@@ -23,6 +23,8 @@ const orderSchema = z.object({
     name: z.string().trim().min(2, "Укажите имя"),
     phone: z.string().trim().min(10, "Укажите телефон"),
     email: z.string().trim().email("Проверьте email"),
+    contactVia: z.enum(["telegram", "instagram", "whatsapp", "vk"]).optional(),
+    contactHandle: z.string().trim().max(64).optional(),
   }),
   delivery: z.object({
     method: z.enum(["cdek-pvz", "cdek-courier", "ozon-pvz", "wb-pvz"]),
@@ -39,6 +41,7 @@ const orderSchema = z.object({
   }),
   comment: z.string().max(2000).optional(),
   promoCode: z.string().max(40).optional(),
+  gift: z.enum(GIFTS.map((g) => g.id) as [GiftId, ...GiftId[]]).optional(),
   consents: z.object({ personalData: z.literal(true), offer: z.literal(true) }),
   items: z
     .array(
@@ -106,6 +109,8 @@ export async function POST(req: Request) {
   }
   items = promo.items;
   const amount = items.reduce((s, i) => s + i.price * i.qty, 0);
+  // подарок — только если сумма товаров (после промокода) действительно от порога
+  const giftLine = body.gift && amount >= GIFT_THRESHOLD ? `Подарок: ${GIFTS.find((g) => g.id === body.gift)!.label}` : "";
   const number = `SL-${Date.now().toString(36).toUpperCase()}`;
   const products = await Promise.all(items.map((i) => (i.ref.kind === "product" ? getProduct(i.ref.slug) : undefined)));
   const packing = pack(
@@ -153,6 +158,8 @@ export async function POST(req: Request) {
         customerName: body.customer.name,
         phone: body.customer.phone,
         email: body.customer.email,
+        contactVia: body.customer.contactVia,
+        contactHandle: body.customer.contactHandle || undefined,
         deliveryMethod: body.delivery.method,
         deliveryCity: body.delivery.city,
         deliveryAddress,
@@ -161,7 +168,7 @@ export async function POST(req: Request) {
         deliveryPoint: body.delivery.pointCode,
         packing: packing.boxes.map((b) => ({ box: b.box.id, weight: b.weight })),
         weight: packing.weight,
-        comment: [body.comment, promo.discount ? `Промокод ${body.promoCode}: −${promo.discount} ₽` : ""].filter(Boolean).join("\n") || undefined,
+        comment: [body.comment, promo.discount ? `Промокод ${body.promoCode}: −${promo.discount} ₽` : "", giftLine].filter(Boolean).join("\n") || undefined,
         promoCode: promo.discount && "code" in promo ? promo.code?.code : undefined,
         phoneDigits,
         amount,
@@ -180,12 +187,14 @@ export async function POST(req: Request) {
       customerName: body.customer.name,
       phone: body.customer.phone,
       email: body.customer.email,
+      contactVia: body.customer.contactVia,
+      contactHandle: body.customer.contactHandle,
       delivery: { "cdek-pvz": "СДЭК, пункт выдачи", "cdek-courier": "СДЭК, курьер", "ozon-pvz": "Ozon", "wb-pvz": "Wildberries" }[body.delivery.method],
       address: [body.delivery.city, deliveryAddress].filter(Boolean).join(", "),
       amount,
       deliveryPrice,
       items,
-      comment: body.comment,
+      comment: [body.comment, giftLine].filter(Boolean).join("\n") || undefined,
     }),
   );
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { gapIn, pickedFromSlots, pruneBelow, slotReason, slotsFromPicked, validateStand } from "@/data/market-rules";
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { allColors, colorById, palette } from "@/data/palette";
@@ -22,7 +23,7 @@ import { StandView } from "./StandView";
 import { useCart } from "@/components/cart/CartProvider";
 import { Photo } from "@/components/ui/Photo";
 import { Tinted } from "@/components/ui/Tinted";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, site } from "@/lib/format";
 import { imageSizes } from "@/data/images";
 
 /*
@@ -219,14 +220,15 @@ function unitsHeight(v: PartVisual) {
 }
 
 /**
- * Раскладка столбика сверху вниз: каждая следующая деталь заезжает под предыдущую
- * на её tuck (место крепления). Отрицательный margin в % считается от ширины сцены —
+ * Раскладка столбика сверху вниз: детали стоят вплотную, как закрученные — стык не виден
+ * (tuck верхней + head нижней). Отрицательный margin в % считается от ширины сцены —
  * поэтому всё в одних «единицах сцены».
  */
 function stackLayout<T extends { v: PartVisual }>(items: T[]) {
   return items.map((it, i) => {
     const prev = items[i - 1];
-    const overlap = prev ? (prev.v.tuck * unitsHeight(prev.v)) / STAGE_UNITS * 100 : 0;
+    // низ верхней детали ниже точки крепления + штырь этой детали над её верхней гранью
+    const overlap = prev ? (prev.v.tuck * unitsHeight(prev.v) + (it.v.head ?? 0) * unitsHeight(it.v)) / STAGE_UNITS * 100 : 0;
     return { ...it, style: { marginTop: overlap ? `-${overlap}%` : undefined, zIndex: items.length - i } as CSSProperties };
   });
 }
@@ -490,7 +492,10 @@ function MarketBuilder() {
   const [giftLogo, setGiftLogo] = useState(true);
   // диадема: две вставки — слева и справа, каждая для пусетов или для цепочек (заказчик, 04.11)
   const [inserts, setInserts] = useState<{ l: DiademInsert; r: DiademInsert }>({ l: "pusety", r: "chains" });
+  // цвет вставок диадемы — отдельно от подиума; null — как подиум (заказчик, 11.11)
+  const [insColors, setInsColors] = useState<{ l: string | null; r: string | null }>({ l: null, r: null });
   const insertName = (id: DiademInsert) => diademInserts.find((x) => x.id === id)!.name;
+  const insColor = (side: "l" | "r") => insColors[side] ?? slotColors[0] ?? color;
 
   const base = marketBases.find((b) => b.id === baseId)!;
   const levels = base.levels;
@@ -549,7 +554,7 @@ function MarketBuilder() {
   const lines: [string, number][] = useMemo(
     () => [
       [
-        `Ножки ${base.name} · ${colorById(color).name}${base.id === "paris" ? (giftLogo ? ` · логотип в подарок, ${colorById(extraColors.logo).name}` : " · без логотипа (вырез под наклейку)") : ""}`,
+        `Ножки ${base.name} · ${colorById(color).name}${base.id === "paris" ? (giftLogo ? " · логотип в подарок (макет согласуем)" : " · без логотипа (вырез под наклейку)") : ""}`,
         base.price,
       ],
       ...(withCrown
@@ -557,16 +562,15 @@ function MarketBuilder() {
         : []),
       ...filled.map((k) => {
         const p = marketPodiums.find((x) => x.id === slots[k])!;
-        const ins = p.id === "diadem" ? ` · вставки: слева ${insertName(inserts.l)}, справа ${insertName(inserts.r)}` : "";
+        const ins = p.id === "diadem" ? ` · вставки: слева ${insertName(inserts.l)} (${colorById(insColor("l")).name}), справа ${insertName(inserts.r)} (${colorById(insColor("r")).name})` : "";
         return [`${slotLabel(k)}: ${p.name} · ${colorById(slotColors[k] ?? color).name}${ins}`, p.price] as [string, number];
       }),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [base, slots, withCrown, color, slotColors, extraColors, giftLogo, inserts],
+    [base, slots, withCrown, color, slotColors, extraColors, giftLogo, inserts, insColors],
   );
   const paintable = [
     { id: "legs", label: `Ножки ${base.name}`, value: color },
-    ...(base.id === "paris" && giftLogo ? [{ id: "logo", label: "Логотип", value: extraColors.logo }] : []),
     ...(withCrown
       ? [
           { id: "crown", label: "Корона: стойки", value: extraColors.crown },
@@ -575,11 +579,18 @@ function MarketBuilder() {
         ]
       : []),
     ...filled.map((k) => ({ id: `s${k}`, label: `${slotLabel(k)} — ${podiumNames[slots[k]!]}`, value: slotColors[k] ?? color })),
+    ...(slots[0] === "diadem"
+      ? [
+          { id: "il", label: "Диадема: вставка слева", value: insColor("l") },
+          { id: "ir", label: "Диадема: вставка справа", value: insColor("r") },
+        ]
+      : []),
   ];
   const paintNow = paintable.find((x) => x.id === paint) ?? paintable[0];
   const setPaintColor = (c: string) => {
     const id = paintNow.id;
     if (id === "legs") setColor(c);
+    else if (id === "il" || id === "ir") setInsColors((prev) => ({ ...prev, [id === "il" ? "l" : "r"]: c }));
     else if (id === "logo" || id === "crown" || id === "cap1" || id === "cap2") setExtraColors((prev) => ({ ...prev, [id]: c }));
     else setSlotColors((prev) => prev.map((x, k) => (`s${k}` === id ? c : x)));
   };
@@ -610,8 +621,9 @@ function MarketBuilder() {
               colors={{
                 legs: color,
                 slots: slots.map((_, k) => slotColors[k] ?? color),
-                logo: baseId === "paris" && giftLogo ? extraColors.logo : null,
+                logo: baseId === "paris" ? color : null, // впадина под логотип — часть ножек
                 crown: withCrown ? { post: extraColors.crown, cap1: extraColors.cap1, cap2: extraColors.cap2 } : null,
+                diadem: slots[0] === "diadem" ? { l: insColor("l"), r: insColor("r") } : null,
               }}
             />
           </div>
@@ -627,7 +639,7 @@ function MarketBuilder() {
             <>
               <div className="cfg-grid">
                 {marketBases.map((b) => (
-                  <Card key={b.id} active={baseId === b.id} onClick={() => changeBase(b.id)} title={b.name} sub={`${b.levels} уровня`} price={b.price} art={<StandView base={b.id} slots={[]} colors={{ legs: color, slots: [], logo: b.id === "paris" ? extraColors.logo : null }} className="cfg-stand-thumb" />} />
+                  <Card key={b.id} active={baseId === b.id} onClick={() => changeBase(b.id)} title={b.name} sub={`${b.levels} уровня`} price={b.price} art={<StandView base={b.id} slots={[]} colors={{ legs: color, slots: [], logo: b.id === "paris" ? color : null }} className="cfg-stand-thumb" />} />
                 ))}
               </div>
               {baseId === "paris" && (
@@ -637,6 +649,13 @@ function MarketBuilder() {
                     Ваш логотип на ножках — в подарок <small className="muted">(без него останется вырез под наклейку, цена та же)</small>
                   </span>
                 </label>
+              )}
+              {baseId === "paris" && giftLogo && (
+                <p className="muted small logo-note">
+                  Файл логотипа пришлите после оформления в{" "}
+                  <a href={site.telegram} target="_blank" rel="noreferrer">Telegram</a> или{" "}
+                  <a href={site.instagram} target="_blank" rel="noreferrer">Instagram</a> с номером заказа. Перед изготовлением согласуем макет. <Link href="/logo">Памятка по логотипу</Link>
+                </p>
               )}
             </>
           )}
@@ -760,7 +779,7 @@ function MarketBuilder() {
           onNext={next ? () => setStep(next) : undefined}
           onAdd={() =>
             add({
-              key: `market:${baseId}:${slots.map((id, k) => (id ? `${id}.${slotColors[k] ?? color}` : "_")).join("+")}:${slots[0] === "diadem" ? `${inserts.l}.${inserts.r}` : ""}:${withCrown}:${color}:${Object.values(extraColors).join(".")}:${baseId === "paris" && !giftLogo ? "nologo" : ""}`,
+              key: `market:${baseId}:${slots.map((id, k) => (id ? `${id}.${slotColors[k] ?? color}` : "_")).join("+")}:${slots[0] === "diadem" ? `${inserts.l}.${insColor("l")}.${inserts.r}.${insColor("r")}` : ""}:${withCrown}:${color}:${Object.values(extraColors).join(".")}:${baseId === "paris" && !giftLogo ? "nologo" : ""}`,
               name: `Стенд ${base.name}`,
               price: total,
               details: [...lines.map(([n]) => n), `Код сборки: ${code}`],

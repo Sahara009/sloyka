@@ -6,8 +6,9 @@ import { ProductArt } from "@/components/art/ProductArt";
 import { Photo } from "@/components/ui/Photo";
 import { DEMO, demoQuote } from "@/lib/demo";
 import { applyPromoCode, findPromoCode } from "@/data/promocodes";
-import { MIN_ORDER_TOTAL } from "@/data/settings";
-import { formatPrice } from "@/lib/format";
+import { contactLabels, handleHint, handleRequired, type ContactVia } from "@/lib/contact";
+import { GIFT_THRESHOLD, GIFTS, MIN_ORDER_TOTAL, type GiftId } from "@/data/settings";
+import { formatPrice, site } from "@/lib/format";
 import { useCart } from "./CartProvider";
 
 const deliveryOptions = [
@@ -55,6 +56,9 @@ export function CartView() {
   const [promoInput, setPromoInput] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [promoMsg, setPromoMsg] = useState("");
+  const [gift, setGift] = useState<GiftId | null>(null);
+  // где удобнее связаться — уточнить доставку и макет логотипа в живом диалоге
+  const [contactVia, setContactVia] = useState<ContactVia>("telegram");
 
   // примерная доставка: пересчитываем, когда покупатель ввёл город или поменял корзину
   const refs = items.map((i) => ({ qty: i.qty, ref: i.ref ?? (i.slug ? { kind: "product", slug: i.slug } : undefined) })).filter((i) => i.ref);
@@ -182,6 +186,9 @@ export function CartView() {
   const promo = applyPromoCode(promoCode, cartLines);
   const toPay = total - promo.discount + deliveryInPay;
   const belowMin = MIN_ORDER_TOTAL > 0 && total < MIN_ORDER_TOTAL;
+  // подарок от GIFT_THRESHOLD за товары после промокода
+  const giftOn = total - promo.discount >= GIFT_THRESHOLD;
+  const needGift = giftOn && !gift;
   const applyCode = () => {
     const c = findPromoCode(promoInput);
     if (!c) {
@@ -220,6 +227,8 @@ export function CartView() {
             name: form.get("name"),
             phone: form.get("phone"),
             email: form.get("email"),
+            contactVia,
+            contactHandle: handleHint[contactVia] ? form.get("contactHandle") || undefined : undefined,
           },
           delivery: {
             method: delivery,
@@ -232,6 +241,7 @@ export function CartView() {
           },
           comment: String(form.get("comment") ?? "") || undefined,
           promoCode: promoCode || undefined,
+          gift: giftOn && gift ? gift : undefined,
           consents: { personalData: form.get("pd") === "on", offer: form.get("offer") === "on" },
           // ref — состав позиции, по нему сервер сам считает цену
           items: items.map((i) => ({
@@ -281,6 +291,13 @@ export function CartView() {
                 ? "Если оплата прошла, чек придёт на почту в течение нескольких минут. Если что-то пошло не так — напишите нам в Telegram."
                 : "Мы свяжемся с вами, чтобы подтвердить детали и сроки изготовления."}
         </p>
+        {!DEMO && (
+          <p className="muted small">
+            Заказывали с логотипом? Пришлите файл в{" "}
+            <a href={site.telegram} target="_blank" rel="noreferrer">Telegram</a> или{" "}
+            <a href={site.instagram} target="_blank" rel="noreferrer">Instagram</a> и укажите номер заказа №{status.orderId}. <Link href="/logo">Памятка по логотипу</Link>
+          </p>
+        )}
         <Link className="btn" href="/catalog">
           Вернуться в каталог
         </Link>
@@ -353,9 +370,31 @@ export function CartView() {
           <input name="phone" type="tel" required autoComplete="tel" placeholder="+7" />
         </label>
         <label className="field">
-          <span>Email для чека</span>
+          <span>Email</span>
           <input name="email" type="email" required autoComplete="email" />
         </label>
+        <fieldset className="field">
+          <span>Где удобнее связаться</span>
+          <small className="muted">Напишем, чтобы уточнить доставку и макет логотипа. Файлы можно прислать туда же или на {site.email}</small>
+          <div className="contact-pick">
+            {(Object.keys(contactLabels) as ContactVia[]).map((v) => (
+              <label key={v} className={`radio ${contactVia === v ? "is-active" : ""}`}>
+                <input type="radio" name="contactVia" value={v} checked={contactVia === v} onChange={() => setContactVia(v)} />
+                <span>{contactLabels[v]}</span>
+              </label>
+            ))}
+          </div>
+          {handleHint[contactVia] && (
+            <input
+              key={contactVia}
+              name="contactHandle"
+              placeholder={handleHint[contactVia]!}
+              required={handleRequired[contactVia]}
+              maxLength={80}
+              autoComplete="off"
+            />
+          )}
+        </fieldset>
 
         <div className="field city-field">
           <label htmlFor="city">Город</label>
@@ -480,6 +519,19 @@ export function CartView() {
         </div>
         {promoMsg && <p className="small muted">{promoMsg}</p>}
 
+        {giftOn && (
+          <fieldset className="gift-pick">
+            <legend>Подарок к заказу — выберите один</legend>
+            {GIFTS.map((g) => (
+              <label key={g.id} className="check">
+                <input type="radio" name="gift" checked={gift === g.id} onChange={() => setGift(g.id)} />
+                <span>{g.label}</span>
+              </label>
+            ))}
+            <p className="muted small">Цвета подарка уточним в Telegram или Instagram после заказа.</p>
+          </fieldset>
+        )}
+
         <div className="checkout__total">
           <span>Товары</span>
           <strong>{formatPrice(total)}</strong>
@@ -518,7 +570,8 @@ export function CartView() {
         </label>
 
         {belowMin && <p className="error">Минимальная сумма заказа — {formatPrice(MIN_ORDER_TOTAL)}. Добавьте ещё на {formatPrice(MIN_ORDER_TOTAL - total)}.</p>}
-        <button className="btn btn--block" disabled={status.type === "sending" || belowMin}>
+        {needGift && <p className="error">Выберите подарок к заказу.</p>}
+        <button className="btn btn--block" disabled={status.type === "sending" || belowMin || needGift}>
           {status.type === "sending" ? "Отправляем…" : `Оплатить ${formatPrice(toPay)} · карта или СБП`}
         </button>
         {status.type === "error" && <p className="error">{status.message}</p>}

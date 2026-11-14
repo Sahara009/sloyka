@@ -6,6 +6,7 @@
  * Без ключей уведомления просто не отправляются — сайт работает как обычно.
  */
 import { formatPrice, site } from "@/lib/format";
+import { contactLabels, contactLink, type ContactVia } from "@/lib/contact";
 
 export function telegramConfigured() {
   return Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
@@ -39,6 +40,8 @@ type OrderInfo = {
   customerName: string;
   phone: string;
   email: string;
+  contactVia?: ContactVia;
+  contactHandle?: string | null;
   delivery: string;
   address: string;
   amount: number;
@@ -57,6 +60,13 @@ export function newOrderText(o: OrderInfo) {
     ...lines,
     `Товары: ${formatPrice(o.amount)}${o.deliveryPrice ? ` · доставка: ${formatPrice(o.deliveryPrice)}` : ""} · <b>итого ${formatPrice(total)}</b>`,
     `👤 ${esc(o.customerName)}, ${esc(o.phone)}, ${esc(o.email)}`,
+    ...(o.contactVia
+      ? [
+          ((link) => `📲 Связь: ${link ? `<a href="${link}">` : ""}${contactLabels[o.contactVia!]}${o.contactHandle ? ` ${esc(o.contactHandle)}` : ""}${link ? "</a>" : ""}`)(
+            contactLink(o.contactVia, o.phone, o.contactHandle),
+          ),
+        ]
+      : []),
     `📦 ${esc(o.delivery)}: ${esc(o.address)}`,
     ...(o.comment ? [`💬 ${esc(o.comment)}`] : []),
   ].join("\n") + adminLink(o);

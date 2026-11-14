@@ -952,3 +952,11 @@
 .set-opt { display: grid; gap: 4px; padding: 4px; border: 1.5px solid transparent; border-radius: 14px; background: none; font: inherit; font-size: 12px; text-align: center; cursor: pointer; }
 .set-opt.is-active { border-color: var(--choc); }
 .set-slot__colors select { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--text); }
+
+/* подарок к заказу от 10 000 ₽ */
+.gift-pick { border: 1.5px dashed var(--line, #d9cbb8); border-radius: 14px; padding: 12px 14px; margin: 14px 0; display: grid; gap: 6px; }
+.gift-pick legend { font-weight: 700; padding: 0 6px; }
+
+/* где удобнее связаться */
+.contact-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.contact-pick .radio { flex: 1 1 140px; }

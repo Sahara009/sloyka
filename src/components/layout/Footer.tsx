@@ -24,6 +24,7 @@ export function Footer() {
           <div>
             <h3>Покупателям</h3>
             <Link href="/delivery">Доставка и оплата</Link>
+            <Link href="/logo">Памятка по логотипу</Link>
             <Link href="/about">История бренда</Link>
             <Link href="/contacts">Контакты</Link>
           </div>

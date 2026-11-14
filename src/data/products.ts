@@ -64,6 +64,8 @@ export type ColorZone = {
   layer?: string;
   /** порядок слоя снизу вверх (что чем перекрывается) */
   order?: number;
+  /** слой без своего выбора цвета — красится как эта зона (впадина под логотип = цвет ножек) */
+  sameAs?: string;
 };
 
 /** Вариант с готовым фото — цвет глазури у Waffle's */
@@ -189,13 +191,30 @@ type SetDef = {
   allowedColors?: string[];
 };
 
+/** Тексты семейств Sloyka Podium — от заказчика (описания, 13.11) */
+const familyText: Record<"fleur" | "bonbon" | "cappottina", { short: string; description: string }> = {
+  "fleur": {
+    "short": "Универсальный фигурный столик-подиум со съёмной ножкой и сменными вкладышами под разные десерты. Трансформируется за секунду — от высокого столика до лаконичного плоского подиума.",
+    "description": "Базовый столик-конструктор с плавным «цветочным» контуром, который работает как готовая рамка для десерта. Ножка легко откручивается, превращая столик в низкий подиум. Дополнительно можно подобрать сменные вкладыши под орешки, пирожные или моти. Выпускается только в диаметре 24 см."
+  },
+  "bonbon": {
+    "short": "Игривый десертный столик с акцентной ножкой, напоминающей конфетки. Создан для эффектной подачи бенто-тортов, пирожных и тартов.",
+    "description": "Модульный столик диаметром 24 см, названный в честь своей фигурной ножки из шариков, напоминающих конфетки. Игривый силуэт добавляет подаче лёгкости, а съёмная конструкция позволяет менять основания из коллекции sloyka.home или использовать столешницу как подиум."
+  },
+  "cappottina": {
+    "short": "Многофункциональный арт-объект 6 в 1: подиум, тортовница и двухъярусная сервировочная этажерка в одном изделии. Шесть вариантов сборки — от минималистичного Podium до полной конфигурации Dei Dolci.",
+    "description": "Главный трансформер коллекции sloyka.home, объединяющий в себе подиум, классическую тортовницу, фруктовницу и самостоятельный арт-объект. Конструкция поддерживает 6 вариантов сборки — от минималистичного Podium для одного акцента до многоуровневой сервировки Dei Dolci для большого стола. Подходит как для акцентной съёмки одного торта, так и для сервировки фруктов, выпечки или фуршетного стола. Даже без десертов Cappottina работает как выразительный предмет интерьера, который не хочется прятать в шкаф."
+  }
+};
+
 /*
+ * Метки «Хит» / «Новинка» — по таблице описаний заказчика (13.11).
  * В каталоге — только основные готовые сборки (структура заказчика от 27.10, порядок как здесь): остальное собирают в конструкторе.
  * TODO: фото новых сборок (без `image` показывается иллюстрация) — рендеры от заказчика.
  */
 const homeSets: SetDef[] = [
-  { name: "Fleur Stand", podium: "fleur", legs: ["muff"], podiumColor: "white", legColor: "cherry", hit: true, image: img("set-fleur-muff") },
-  { name: "BonBon Stand", podium: "bonbon", legs: ["souffle"], podiumColor: "butter", legColor: "white", hit: true, noImage: true },
+  { name: "Fleur Stand", podium: "fleur", legs: ["muff"], podiumColor: "white", legColor: "cherry", image: img("set-fleur-muff"), gallery: [photo("fleur-stand-white"), photo("fleur-stand-brown"), photo("fleur-tower")] },
+  { name: "BonBon Stand", podium: "bonbon", legs: ["souffle"], podiumColor: "butter", legColor: "white", noImage: true, gallery: [photo("bonbon-stand-pink"), photo("bonbon-stand-gift")] },
   { name: "Cappottina Torre", podium: "cappottina", legs: ["grande", "piccola"], podiumColor: "brownie", legColor: "white", noImage: true },
   { name: "Fleur-Bon", podium: "fleur", legs: ["souffle"], podiumColor: "white", legColor: "ivory", noImage: true },
   { name: "Fleur Pumpkin", podium: "fleur", legs: ["pumpkin"], podiumColor: "white", legColor: "pumpkin-spice", noImage: true },
@@ -231,7 +250,6 @@ const homeSets: SetDef[] = [
     extra: "nuts",
     podiumColor: "latte",
     legColor: "latte",
-    hit: true,
     image: photo("set-fleur-nuts"),
     note: "Столик для орешков: Fleur на ножке Muff со вкладышем Nuts. Акционные цвета: карамель, латте, пудра, слоновая кость.",
     promoPrice: 2500,
@@ -315,7 +333,7 @@ const setProducts: Product[] = homeSets.map((s) => {
     allowedColors: s.allowedColors,
     short: s.podium === "cappottina" ? (s.extra ? "Подиум, столик и фруктовница" : "Подиум и столик") : `Десертный столик, высота ножки ${height} см`,
     multi: s.podium === "cappottina" ? (s.extra ? "3 в 1" : "2 в 1") : undefined,
-    description: `${s.note ? s.note + " " : ""}Готовая сборка Sloyka Podium. Детали можно менять и комбинировать между собой: сегодня одна сборка, завтра другая.`,
+    description: `${s.note ? s.note + " " : ""}${familyText[s.podium as keyof typeof familyText].description}`,
     specs: [
       `Подиум: ${cap(s.podium)}`,
       `Ножка: ${s.legs.map(cap).join(" + ")}`,
@@ -355,8 +373,8 @@ const partProducts: Product[] = [
     series: "modular",
     kind: "part",
     price: p.price,
-    short: p.note,
-    description: `${p.note}. Подходит ко всем ножкам Sloyka Podium.`,
+    short: familyText[p.id as keyof typeof familyText]?.short ?? p.note,
+    description: familyText[p.id as keyof typeof familyText]?.description ?? `${p.note}. Подходит ко всем ножкам Sloyka Podium.`,
     specs: [
       { bonbon: "Ø 24 см (полезная зона Ø 21,5 см), высота 1,5 см", fleur: "Ø 24 см (полезная зона Ø 19 см), высота 2 см", cappottina: "Ø 27 см (полезная зона Ø 24 см), высота 5 см" }[p.id],
       ...(p.id === "cappottina" ? ["Логотип: +500 ₽ (врезной)"] : []),
@@ -374,6 +392,7 @@ const partProducts: Product[] = [
     logoAddon: p.id === "cappottina" || undefined,
     logoFlat: p.id === "cappottina" ? 500 : undefined,
     image: img(`podium-${p.id}`),
+    gallery: ({ bonbon: [photo("bonbon-podium-pink"), photo("bonbon-balls-2")], fleur: [photo("fleur-tower")] } as Record<string, string[]>)[p.id],
     art: { type: "table", podium: p.id, legs: [], podiumColor: "marzipan", legColor: "marzipan" },
   })),
   ...legs.map<Product>((l) => ({
@@ -402,12 +421,13 @@ const partProducts: Product[] = [
     short: "Запасной комплект шариков, один цвет",
     description:
       "Дополнительный комплект шариков для подиума Bonbon. Набор одного цвета: нужны два цвета — закажите два набора по 6 шариков.",
-    specs: ["6 шариков — 150 ₽", "12 шариков — 300 ₽", "Цвет набора: один, из палитры", "Материал: экологичный пластик"],
+    specs: ["6 шариков — 150 ₽", "12 шариков — 300 ₽", "Размер шарика: 2 × 2 × 2 см", "Цвет набора: один, из палитры", "Материал: экологичный пластик"],
     options: [
       { id: "6", label: "6 шариков", price: 150 },
       { id: "12", label: "12 шариков (полный набор)", price: 300 },
     ],
     colors: "one",
+    gallery: [photo("bonbon-balls-1"), photo("bonbon-balls-2")],
     art: { type: "table", podium: "bonbon", legs: [], podiumColor: "marzipan", legColor: "marzipan" },
   },
   ...homeExtras.filter((e) => !e.hidden).map<Product>((e) => ({
@@ -492,7 +512,7 @@ const classicProducts: Product[] = [
       "Столик, дизайн которого вдохновлён плавными очертаниями выпечки, которые идеально подчёркивают «домашний» и уютный кондитерский стиль десертов. Модель выпускается в нескольких размерах (включая увеличенные форматы L и XL), а также адаптирована для нанесения ваших логотипов! Продуманная геометрия гарантирует отличный баланс: ставить торт на подложке на столик максимально удобно и комфортно, а сама конструкция не качается.",
     specs: classicSpecs,
     image: img("classic-muffin"),
-    gallery: [img("classic-muffin-l")],
+    gallery: [img("classic-muffin-l"), photo("muffin-butter"), photo("muffin-logo-pink"), photo("muffin-logo-mocha")],
     options: classicOptions(2, img("classic-muffin-l")),
     colors: "two",
     logoAddon: true,
@@ -562,7 +582,6 @@ const designProducts: Product[] = [
       { id: "16", label: "16 см", price: 1500 },
       { id: "24", label: "24 см", price: 2500 },
     ],
-    hit: true,
   },
   {
     slug: "rossi",
@@ -593,6 +612,7 @@ const designProducts: Product[] = [
     description: "Первый инновационный столик-конструктор от SLOYKA. Столик состоит из модульных элементов, благодаря которым можно выкручивать нижнюю часть ножки и уменьшать высоту столика, полностью меняя свою подачу. Столик буквально создан для тех, кто любит разнообразие в контенте. Доступен в версиях Bento (16 см), Cake (22 см) и Modular+ с увеличенной столешницей до 25,5 см. Идеальный инструмент для многоуровневых кэнди-баров и сложных фуд-съёмок.",
     specs: ["Bento 16 см: высота 7,5 или 11 см", "Cake 22 см: высота 9,5 или 15 см", "4 части: столешница, верх и низ ножки, подстолье", "Материал: экологичный пластик PLA"],
     image: img("design-modular"),
+    gallery: [photo("modular-pair"), photo("modular-pink"), photo("modular-pink-low"), photo("modular-butter"), photo("modular-butter-low"), photo("modular-pistachio"), photo("modular-pistachio-low"), photo("modular-pink-low-2")],
     options: [
       { id: "16", label: "Bento 16 см", price: 1500 },
       { id: "22", label: "Cake 22 см", price: 2500 },
@@ -610,10 +630,12 @@ const designProducts: Product[] = [
     description: "Первый инновационный столик-конструктор от SLOYKA. Столик состоит из модульных элементов, благодаря которым можно выкручивать нижнюю часть ножки и уменьшать высоту столика, полностью меняя свою подачу. Столик буквально создан для тех, кто любит разнообразие в контенте. Доступен в версиях Bento (16 см), Cake (22 см) и Modular+ с увеличенной столешницей до 25,5 см. Идеальный инструмент для многоуровневых кэнди-баров и сложных фуд-съёмок.",
     specs: ["Ø 25,5 см: высота 9,5 или 16 см", "4 части: столешница, верх и низ ножки, подстолье", "Материал: экологичный пластик PLA"],
     image: img("design-modular-plus"),
+    gallery: [photo("modular-plus-ivory"), photo("modular-plus-white"), photo("modular-plus-low")],
   },
   {
     slug: "podium-i-stand",
-    zones: [{ id: "top", label: "Подиум" }, { id: "leg", label: "Ножка" }, { id: "logo", label: "Логотип" }],
+    // логотип — отдельная вклейка во впадину, цвета по макету (заказчик, 11.11)
+    zones: [{ id: "top", label: "Подиум" }, { id: "leg", label: "Ножка" }],
     name: "Podium I Stand",
     line: "podium",
     series: "design",
@@ -627,7 +649,7 @@ const designProducts: Product[] = [
   },
   {
     slug: "podium-i",
-    zones: [{ id: "top", label: "Подиум" }, { id: "logo", label: "Логотип" }],
+    zones: [{ id: "top", label: "Подиум" }],
     name: "Podium I",
     line: "podium",
     series: "design",
@@ -678,10 +700,11 @@ const designProducts: Product[] = [
     series: "design",
     kind: "podium",
     price: 850,
-    short: "Рифлёный подиум-«монетка», 14–18 см",
-    description: "Низкий рифлёный подиум. Хорош поодиночке и пирамидкой из трёх размеров.",
+    short: "Лаконичные подиумы в диаметрах 14, 16 и 18 см. Можно приобрести поштучно или в сете Combo из трёх размеров для создания многоуровневых композиций в фуд-фотографии и подаче.",
+    description: "Базовые подиумы, которые работают как идеальный пьедестал для тортов, пирожных, свечей и любых объектов в кадре. Подиумы представлены в диаметрах 14, 16 и 18 см — легко подобрать под размер конкретного десерта или задачи. Берите один подиум для минималистичного акцента или закажите набор Combo из трёх диаметров, чтобы выстраивать в кадре динамичные ярусы и «лесенки». Доступны в любом оттенке нашей коллекции — миксуйте цвета в одном наборе или соберите монохромный сет.",
     specs: ["14 см: Ø 15 см, высота 2,5 см", "16 см: Ø 17,5 см, высота 2,5 см", "18 см: Ø 19,5 см, высота 2,5 см", "Материал: экологичный пластик PLA"],
     image: img("podium-penny"),
+    gallery: [photo("penny-trio"), photo("penny-stack-colors"), photo("penny-combo-pistachio"), photo("penny-combo-sage")],
     options: [
       { id: "14", label: "14 см", price: 850 },
       { id: "16", label: "16 см", price: 950 },
@@ -696,9 +719,10 @@ const designProducts: Product[] = [
     kind: "podium",
     price: 1900,
     short: "3 подиума одного размера или пирамидка 14 + 16 + 18",
-    description: "Наборы из трёх подиумов Penny: одного размера или Penny Combo — пирамидка из 14, 16 и 18 см.",
+    description: "Наборы из трёх подиумов Penny: одного размера или Penny Combo — пирамидка из 14, 16 и 18 см. Базовые подиумы, которые работают как идеальный пьедестал для тортов, пирожных, свечей и любых объектов в кадре. Подиумы представлены в диаметрах 14, 16 и 18 см — легко подобрать под размер конкретного десерта или задачи. Берите один подиум для минималистичного акцента или закажите набор Combo из трёх диаметров, чтобы выстраивать в кадре динамичные ярусы и «лесенки». Доступны в любом оттенке нашей коллекции — миксуйте цвета в одном наборе или соберите монохромный сет.",
     specs: ["Set-14, Set-16, Set-18 — 3 подиума одного размера", "Combo — 14, 16 и 18 см", "Каждый подиум — своего цвета", "Материал: экологичный пластик PLA"],
     image: img("podium-penny-set"),
+    gallery: [photo("penny-combo-pistachio"), photo("penny-combo-sage"), photo("penny-combo-sage-detail"), photo("penny-combo-sage-top"), photo("penny-stack-colors")],
     options: [
       { id: "set14", label: "Set-14", price: 1900 },
       { id: "set16", label: "Set-16", price: 2200 },
@@ -724,7 +748,7 @@ const designProducts: Product[] = [
       { id: "16", label: "16 см", price: 1250 },
       { id: "18", label: "18 см", price: 1350 },
     ],
-    zones: [{ id: "top", label: "Подиум" }, { id: "logo", label: "Логотип" }],
+    zones: [{ id: "top", label: "Подиум" }],
   },
   {
     slug: "penny-logo-set",
@@ -747,9 +771,6 @@ const designProducts: Product[] = [
       { id: "p1", label: "Подиум 1" },
       { id: "p2", label: "Подиум 2" },
       { id: "p3", label: "Подиум 3" },
-      { id: "logo1", label: "Логотип 1" },
-      { id: "logo2", label: "Логотип 2" },
-      { id: "logo3", label: "Логотип 3" },
     ],
   },
   {
@@ -759,8 +780,8 @@ const designProducts: Product[] = [
     series: "design",
     kind: "podium",
     price: 350,
-    short: "Мини-подиум 10 см: цветок, волна или печенье",
-    description: "Маленький подиум 10 см для пирожных, капкейков и бенто. Три формы: Flower, Wave и Cookie. Сама подставка — одного цвета, шарики — второго.",
+    short: "Крошечные подиумы на миниатюрных ножках-конфетках для штучной подачи макаронс, моти и корпусных пирожных. Доступны в трёх фигурных формах (Flower, Cookie, Wave) и любых цветовых сочетаниях.",
+    description: "Крошечные подиумы на ножках-конфетках для штучной подачи моти, макаронс и корпусных пирожных, превращающие один десерт в ювелирный арт-объект. Доступны в трёх формах — выберите настроение под ваш десерт: нежный цветок Flower, игривое печенье Cookie или плавную волну Wave. Цвет столешницы и ножек-шариков можно выбрать по отдельности из всей палитры — от спокойного монохрома до смелых контрастов.",
     image: photo("minies-sets-color"),
     gallery: [photo("minies-sets-milk"), photo("minies-stack")],
     specs: ["Ø 10 см, высота 2,5 см", "Формы: Flower, Wave, Cookie", "Материал: экологичный пластик PLA"],
@@ -779,7 +800,7 @@ const designProducts: Product[] = [
     kind: "podium",
     price: 800,
     short: "3, 6 или 12 мини-подиумов любых форм",
-    description: "Полное ассорти мини-подиумов Minies: в наборе любые формы — Flower, Wave, Cookie — и у каждого подиума свои два цвета: подставка и шарики.",
+    description: "Полное ассорти мини-подиумов Minies: в наборе любые формы — Flower, Wave, Cookie — и у каждого подиума свои два цвета: подставка и шарики. Крошечные подиумы на ножках-конфетках для штучной подачи моти, макаронс и корпусных пирожных, превращающие один десерт в ювелирный арт-объект. Доступны в трёх формах — выберите настроение под ваш десерт: нежный цветок Flower, игривое печенье Cookie или плавную волну Wave. Цвет столешницы и ножек-шариков можно выбрать по отдельности из всей палитры — от спокойного монохрома до смелых контрастов.",
     image: photo("minies-stack"),
     gallery: [photo("minies-sets-color"), photo("minies-sets-milk")],
     formPick: ["Flower", "Wave", "Cookie"],
@@ -816,8 +837,15 @@ function standZones(s: { base: string; podiums: string[]; crown?: boolean }): Co
       const id = s.podiums[i];
       return { id: `p${i + 1}`, label: `${tierName(tierOf(i, s.podiums.length, levels))} — ${podiumName(id)}` };
     }),
+    // диадема: подиум и две вставки красятся отдельно (заказчик, 11.11)
+    ...(s.podiums.includes("diadem")
+      ? [
+          { id: "diadem-l", label: "Диадема: вставка слева" },
+          { id: "diadem-r", label: "Диадема: вставка справа" },
+        ]
+      : []),
     { id: "legs", label: "Ножки" },
-    ...(s.base === "paris" ? [{ id: "logo", label: "Логотип" }] : []),
+    // Париж: впадина под логотип — часть ножек (монолит, цвет ножек), сам логотип — отдельный круг по макету (заказчик, 11.11)
     // корона (заказчик, 03.11): стойки с переходником — один цвет, шапка — 50/50 два цвета
     ...(s.crown
       ? [
@@ -835,7 +863,6 @@ const parisZones: ColorZone[] = [
   { id: "p2", label: "Подиум 2" },
   { id: "p3", label: "Подиум 3" },
   { id: "legs", label: "Ножки" },
-  { id: "logo", label: "Логотип" },
 ];
 
 // Готовые стойки по матрице заказчика (29.10). В матрице подиумы перечислены сверху вниз, здесь — снизу вверх.
@@ -888,7 +915,8 @@ const marketProducts: Product[] = [
     short: "Самостоятельная стойка: 2 подиума, ножки и логотип",
     description: "Отдельная модель вне конструктора: два подиума-полки на ножках с вашим логотипом.",
     specs: ["Габариты: 29 × 26 × 20,5 см", "Полка: 29 × 13 см", "Этажи: 10,5 и 20,5 см", "Материал: экологичный пластик PLA"],
-    zones: [{ id: "p1", label: "Подиум сверху" }, { id: "p2", label: "Подиум снизу" }, { id: "legs", label: "Ножки" }, { id: "logo", label: "Логотип" }],
+    // впадина под логотип — часть ножек, логотип вклеивается отдельным кругом по макету (заказчик, 11.11)
+    zones: [{ id: "p1", label: "Подиум сверху" }, { id: "p2", label: "Подиум снизу" }, { id: "legs", label: "Ножки" }, { id: "logo", label: "Логотип", sameAs: "legs" }],
     art: { type: "stand", levels: 2, colors: ["marzipan", "marzipan"] },
     isNew: true,
   },
@@ -901,17 +929,19 @@ const marketProducts: Product[] = [
     category: ["accessories"],
     price: 2000,
     short: "Интерактив для витрины и маркета: розыгрыши и подарки",
-    description: "Настольное колесо фортуны для маркетов и витрин. Каждую деталь можно сделать своим цветом из палитры.",
-    specs: ["Ø 18 см, габариты 18 × 4 × 23,5 см", "Секции и разделители — по два цвета через одну", "Материал: экологичный пластик PLA"],
-    zones: [
-      { id: "frame", label: "Кронштейн и диск" },
-      { id: "arrow", label: "Стрелка" },
-      { id: "sec1", label: "Секции (половина 1)" },
-      { id: "sec2", label: "Секции (половина 2)" },
-      { id: "div1", label: "Разделители (половина 1)" },
-      { id: "div2", label: "Разделители (половина 2)" },
-      { id: "center", label: "Центральный диск" },
+    description: "Настольное колесо фортуны для маркетов и витрин: розыгрыши, подарки и интерактив с покупателями.",
+    specs: ["Ø 18 см, габариты 18 × 4 × 23,5 см", "Материал: экологичный пластик PLA"],
+    // 5 готовых расцветок от заказчика (13.11); конструктор по деталям — позже, вместе с бирками
+    image: photo("carnival-1"),
+    variantLabel: "Расцветка",
+    variants: [
+      { id: "c1", name: "Фламинго · клубничный йогурт · сливочное масло", swatch: "", image: photo("carnival-1") },
+      { id: "c2", name: "Малиновый йогурт · клубничный йогурт · сливочное масло", swatch: "", image: photo("carnival-2") },
+      { id: "c3", name: "Черничный йогурт · малиновый йогурт · марципан", swatch: "", image: photo("carnival-3") },
+      { id: "c4", name: "Слоновая кость · пряная тыква · сливочное масло", swatch: "", image: photo("carnival-4") },
+      { id: "c5", name: "Малиновый йогурт · клубничный йогурт · белый", swatch: "", image: photo("carnival-5") },
     ],
+    colors: "none",
     art: { type: "decor", label: "Карнавал", variant: "logo" },
   },
   ...marketBases.map<Product>((b) => ({
@@ -1406,11 +1436,9 @@ const wishProducts: Product[] = [
     series: "wish",
     kind: "decor",
     category: ["keychains"],
-    // TODO: цена от заказчика — пока заказ через личку
-    price: null,
-    orderVia: "direct",
+    price: 70,
     short: "Подвеска-миксер с петелькой",
-    description: "Плоская подвеска в виде планетарного миксера — на ключи, сумку или как подарок кондитеру. Напишите нам, подберём цвета.",
+    description: "Плоская подвеска в виде планетарного миксера — на ключи, сумку или как подарок кондитеру.",
     specs: ["Цвета — под заказ", "Материал: экологичный пластик PLA"],
     image: photo("keychain-mixer"),
     colors: "none",

@@ -4,7 +4,7 @@ import { legalDocs } from "@/data/legal";
 import { site } from "@/lib/format";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const pages = ["", "/catalog", "/constructor", "/business", "/about", "/contacts", "/delivery"];
+  const pages = ["", "/catalog", "/constructor", "/business", "/about", "/contacts", "/delivery", "/logo"];
   return [
     ...pages.map((p) => ({ url: `${site.url}${p}`, changeFrequency: "weekly" as const, priority: p === "" ? 1 : 0.8 })),
     ...products.map((p) => ({ url: `${site.url}/catalog/${p.slug}`, changeFrequency: "monthly" as const, priority: 0.6 })),

@@ -15,6 +15,7 @@ const nav = [
   { href: "/admin/requests", label: "Заявки" },
   { href: "/admin/products", label: "Товары" },
   { href: "/admin/shipping", label: "Доставка" },
+  { href: "/admin/colors", label: "Цвета" },
 ];
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {

@@ -125,6 +125,9 @@ model Order {
   customerName    String
   phone           String
   email           String
+  /// где удобнее связаться: telegram | instagram | whatsapp | vk; ник / ссылка (для Instagram и ВК обязательно)
+  contactVia      String?
+  contactHandle   String?
   deliveryMethod  String // cdek-pvz | cdek-courier | ozon-pvz | wb-pvz
   deliveryCity    String?
   deliveryAddress String

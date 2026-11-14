@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ProductVisual } from "@/components/art/ProductArt";
 import { useCart } from "@/components/cart/CartProvider";
 import { Photo } from "@/components/ui/Photo";
@@ -34,6 +34,11 @@ export function ProductView({ product, children }: { product: Product; children?
   const [addedAddon, setAddedAddon] = useState<string | null>(null);
 
   const [optionId, setOptionId] = useState(product.options?.[0]?.id);
+  // ?size=24 — пришли с соседнего варианта семейства (Milano: подиум ↔ столик) с тем же размером
+  useEffect(() => {
+    const size = new URLSearchParams(window.location.search).get("size");
+    if (size && product.options?.some((o) => o.id === size)) setOptionId(size);
+  }, [product.slug]); // eslint-disable-line react-hooks/exhaustive-deps
   const [variantId, setVariantId] = useState(product.variants?.[0]?.id);
   const baseZones = zonesOf(product);
   // цвет по зонам: первая зона — столешница/подиум, вторая — ножка, остальные стартуют белыми
@@ -71,10 +76,14 @@ export function ProductView({ product, children }: { product: Product; children?
   const optionTitle = product.options?.some((o) => o.id === "podium") ? "Вариант сборки" : product.slug === "bonbon-balls" || product.slug === "keychain-macaron" ? "Количество" : "Размер";
   const logoOffer = logoCost(product, option);
   const logo = withLogo && logoOffer !== null ? logoOffer : 0;
-  // логотип красится отдельно (Muffin, Marble) — зона появляется, когда логотип выбран
   // у варианта могут быть свои зоны (наборы Minies: 3, 6 или 12 подиумов — у каждого свой цвет)
   const optZones = (option?.zones ?? baseZones).filter((z) => !(product.logoGift && !giftLogo && z.id === "logo"));
-  const zones: ColorZone[] = logo && product.logoZone ? [...optZones, { id: "logo", label: "Логотип" }] : optZones;
+  // цвета логотипа не выбираем — согласуем в личке по макету (заказчик, 11.11)
+  const allZones: ColorZone[] = optZones;
+  // зоны со sameAs (впадина под логотип у Leon) — без своего выбора цвета, красятся как ножки
+  const zones = allZones.filter((z) => !z.sameAs);
+  // логотип уже в комплекте (Leon, Podium I, Penny с логотипом, Па-Париж) — тоже подсказываем, куда прислать файл
+  const logoIncluded = /логотип/i.test(`${product.name} ${product.short} ${(product.specs ?? []).join(" ")}`) && !product.logoAddon;
   // много зон — компактный выбор списком, чтобы страница не растягивалась на несколько экранов
   const compactZones = zones.length > 6 || !!product.formPick;
   const color = zones[0] ? colorOf(zones[0].id) : initialColor;
@@ -91,7 +100,7 @@ export function ProductView({ product, children }: { product: Product; children?
   const layerSrc = (z: (typeof zones)[number]) => option?.layers?.[z.id] ?? z.layer;
   // зоны без своего слоя (логотип, «вкладыш, если добавите») не мешают — их просто не рисуем
   const canSkip = (z: ColorZone) => z.id.startsWith("logo") || z.id === "insert";
-  const layerZones = zones.filter((z) => layerSrc(z)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const layerZones = allZones.filter((z) => layerSrc(z)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const layered = !shot && !variant?.image && layerZones.length > 0 && zones.every((z) => layerSrc(z) || canSkip(z));
   const thumbs = useMemo(() => {
     const list = [product.image, ...(product.gallery ?? [])].filter(Boolean) as string[];
@@ -146,14 +155,16 @@ export function ProductView({ product, children }: { product: Product; children?
               colors={{
                 legs: colorOf("legs"),
                 slots: slotsFromPicked(preset.podiums.map((_, i) => `p${i + 1}`), marketBases.find((b) => b.id === preset.base)!.levels).map((z) => (z ? colorOf(z) : colorOf("legs"))),
-                logo: zones.some((z) => z.id === "logo") ? colorOf("logo") : null,
+                // Париж: впадина под логотип — цвет ножек; сам логотип вклеивается отдельно
+                logo: preset.base === "paris" ? colorOf("legs") : null,
+                diadem: hasDiadem ? { l: colorOf("diadem-l"), r: colorOf("diadem-r") } : null,
                 crown: preset.crown ? { post: colorOf("crown"), cap1: colorOf("crown-cap1"), cap2: colorOf("crown-cap2") } : null,
               }}
             />
           ) : layered ? (
             <span className="layered" role="img" aria-label={product.name}>
               {layerZones.map((z, i) => (
-                <Tinted key={z.id} base={layerSrc(z)!} color={colorById(colorOf(z.id)).hex} className={i ? "layered__top" : ""} />
+                <Tinted key={z.id} base={layerSrc(z)!} color={colorById(colorOf(z.sameAs ?? z.id)).hex} className={i ? "layered__top" : ""} />
               ))}
             </span>
           ) : (
@@ -211,9 +222,11 @@ export function ProductView({ product, children }: { product: Product; children?
               {family.members.map((m) => {
                 const mp = productBySlug(m.slug);
                 if (!mp) return null;
-                const price = effectivePrice(mp);
+                // цена того же размера, что выбран сейчас (16 / 24 см), иначе базовая
+                const same = optionId ? mp.options?.find((o) => o.id === optionId) : undefined;
+                const price = same ? same.price : effectivePrice(mp);
                 return (
-                  <Link key={m.slug} href={`/catalog/${m.slug}`} className={`size ${m.slug === product.slug ? "is-active" : ""}`} aria-current={m.slug === product.slug ? "page" : undefined} scroll={false}>
+                  <Link key={m.slug} href={`/catalog/${m.slug}${same ? `?size=${same.id}` : ""}`} className={`size ${m.slug === product.slug ? "is-active" : ""}`} aria-current={m.slug === product.slug ? "page" : undefined} scroll={false}>
                     {m.label}
                     {price !== null && <small>{formatPrice(price)}</small>}
                   </Link>
@@ -428,6 +441,13 @@ export function ProductView({ product, children }: { product: Product; children?
                   <small className="muted"> (без него останется пустой вырез, например под наклейку; цена та же)</small>
                 </span>
               </label>
+            )}
+            {(logo > 0 || (product.logoGift && giftLogo) || logoIncluded) && (
+              <p className="muted small logo-note">
+                Файл логотипа пришлите после оформления в{" "}
+                <a href={site.telegram} target="_blank" rel="noreferrer">Telegram</a> или{" "}
+                <a href={site.instagram} target="_blank" rel="noreferrer">Instagram</a> с номером заказа. Перед изготовлением согласуем макет. <Link href="/logo">Памятка по логотипу</Link>
+              </p>
             )}
             {hasDiadem && (
               <div className="diadem-pick">
