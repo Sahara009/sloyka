@@ -1,4 +1,4 @@
-import type React from "react";
+import type { CSSProperties } from "react";
 import { imageSizes } from "@/data/images";
 import { photoCrops } from "@/data/photo-crops";
 
@@ -8,7 +8,7 @@ type Props = {
   className?: string;
   /** Для первого экрана — грузить сразу */
   eager?: boolean;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 };
 
 /**

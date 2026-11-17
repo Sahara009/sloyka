@@ -270,7 +270,7 @@ function HomeBuilder() {
       setExtra(e === "0" ? null : (ex?.id ?? null));
       if (c && c.length >= 3) {
         const at = (i: number, d: string) => (c[i] ? (colorFromCode(c[i]) ?? d) : d);
-        setColors({ podium: at(0, "white"), leg: at(1, "white"), top: at(2, "white"), insert: at(3, at(0, "white")), balls1: at(4, "white"), balls2: at(5, "white") });
+        setColors({ podium: at(0, "white"), leg: at(1, "white"), top: at(2, "white"), insert: at(3, at(0, "white")), balls1: at(4, "white"), balls2: at(5, "white"), spare: at(4, "white") });
       }
       return;
     }
