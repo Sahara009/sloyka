@@ -323,10 +323,10 @@ export default async function HomePage() {
             </div>
             <div className="waffles__items">
               {[
-                { src: "/products/waffle-tall-pistachio.webp", n: "Tall", p: "550 ₽", slug: "waffle-tall" },
-                { src: "/products/waffle-square-strawberry.webp", n: "Square", p: "600 ₽", slug: "waffle-square" },
-                { src: "/products/waffle-round-raspberry.webp", n: "Round", p: "490 ₽", slug: "waffle-round" },
-                { src: "/products/waffle-tray.webp", n: "Jewellery Tray", p: "400 ₽", slug: "waffle-tray" },
+                { src: "/products/waffle-cut-tall.webp", n: "Tall", p: "550 ₽", slug: "waffle-tall" },
+                { src: "/products/waffle-cut-square.webp", n: "Square", p: "600 ₽", slug: "waffle-square" },
+                { src: "/products/waffle-cut-round.webp", n: "Round", p: "490 ₽", slug: "waffle-round" },
+                { src: "/products/waffle-cut-tray.webp", n: "Jewellery Tray", p: "400 ₽", slug: "waffle-tray" },
               ].map((w, i) => (
                 <Reveal key={w.slug} effect="up" delay={i * 110}>
                   <Link href={`/catalog/${w.slug}`} className="waffle">

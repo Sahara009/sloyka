@@ -73,7 +73,7 @@ export function ProductView({ product, children }: { product: Product; children?
 
   const option = product.options?.find((o) => o.id === optionId);
   const variant = product.variants?.find((v) => v.id === variantId);
-  const optionTitle = product.options?.some((o) => o.id === "podium") ? "Вариант сборки" : product.slug === "bonbon-balls" || product.slug === "keychain-macaron" ? "Количество" : "Размер";
+  const optionTitle = product.options?.some((o) => o.id === "podium") ? "Вариант сборки" : product.slug === "bonbon-balls" || product.slug === "keychain-macaron" ? "Количество" : product.slug === "halloween-toppers" ? "Состав" : "Размер";
   const logoOffer = logoCost(product, option);
   const logo = withLogo && logoOffer !== null ? logoOffer : 0;
   // у варианта могут быть свои зоны (наборы Minies: 3, 6 или 12 подиумов — у каждого свой цвет)
@@ -96,6 +96,8 @@ export function ProductView({ product, children }: { product: Product; children?
   const unit = base === null ? null : (option?.price ?? base) + logo;
 
   const mainImage = shot ?? variant?.image ?? option?.image ?? product.image;
+  // RENDER — первая миниатюра «рендер в выбранных цветах», когда своей картинки у товара нет
+  const RENDER = "__render";
   // слои деталей (если есть у всех зон): складываем и красим каждый отдельно
   const layerSrc = (z: (typeof zones)[number]) => option?.layers?.[z.id] ?? z.layer;
   // зоны без своего слоя (логотип, «вкладыш, если добавите») не мешают — их просто не рисуем
@@ -103,7 +105,7 @@ export function ProductView({ product, children }: { product: Product; children?
   const layerZones = allZones.filter((z) => layerSrc(z)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const layered = !shot && !variant?.image && layerZones.length > 0 && zones.every((z) => layerSrc(z) || canSkip(z));
   const thumbs = useMemo(() => {
-    const list = [product.image, ...(product.gallery ?? [])].filter(Boolean) as string[];
+    const list = [product.image ?? (product.cover || product.gallery?.length ? RENDER : undefined), product.cover, ...(product.gallery ?? [])].filter((x, i, a): x is string => !!x && a.indexOf(x) === i);
     return list.length > 1 ? list : [];
   }, [product]);
 
@@ -144,7 +146,7 @@ export function ProductView({ product, children }: { product: Product; children?
     <div className="product">
       <div className="product__media">
         <Shape shape={isPhoto ? "arch" : "arch-scallop"} outline="var(--blue-400)" bg="var(--blue-100)" stroke={6} ratio="4 / 5" className={isPhoto ? "" : "bg-stripes-blue"}>
-          {preset ? (
+          {preset && !shot ? (
             <StandView
               label={product.name}
               className="product__stand"
@@ -184,11 +186,11 @@ export function ProductView({ product, children }: { product: Product; children?
                 key={src}
                 type="button"
                 role="listitem"
-                className={`thumbs__item ${(shot ?? product.image) === src && !variant?.image ? "is-active" : ""}`}
-                onClick={() => setShot(src === product.image ? null : src)}
-                aria-label="Показать фото"
+                className={`thumbs__item ${(shot ?? product.image ?? RENDER) === src && !variant?.image ? "is-active" : ""}`}
+                onClick={() => setShot(src === product.image || src === RENDER ? null : src)}
+                aria-label={src === RENDER ? "Показать сборку в выбранных цветах" : "Показать фото"}
               >
-                <Photo src={src} alt="" />
+                {src === RENDER ? <ProductVisual product={product} className="thumbs__art" /> : <Photo src={src} alt="" />}
               </button>
             ))}
           </div>

@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/catalog/ProductCard";
 import { ProductView } from "@/components/catalog/ProductView";
 import { Reveal } from "@/components/ui/Reveal";
 import { lineTitles, type Product } from "@/data/products";
+import { categories, categoriesOf } from "@/data/categories";
 import { getProduct, getProducts } from "@/lib/server/catalog";
 import { ldJson, productLd, seoDescription } from "@/lib/seo";
 
@@ -46,6 +47,15 @@ export default async function ProductPage({ params }: Params) {
       <script type="application/ld+json" dangerouslySetInnerHTML={ldJson(productLd(product))} />
       <nav className="crumbs" aria-label="Хлебные крошки">
         <Link href="/catalog">Каталог</Link> / <Link href={`/catalog?line=${product.line}`}>{lineTitles[product.line]}</Link> /{" "}
+        {(() => {
+          // раздел внутри линейки — чтобы вернуться ровно туда, откуда пришли (заказчик, 17.11)
+          const c = categories[product.line]?.find((x) => x.id === categoriesOf(product)[0]);
+          return c ? (
+            <>
+              <Link href={`/catalog?line=${product.line}&cat=${c.id}`}>{c.title}</Link> /{" "}
+            </>
+          ) : null;
+        })()}
         {product.name}
       </nav>
 
@@ -70,9 +80,23 @@ export default async function ProductPage({ params }: Params) {
           </details>
           <details>
             <summary>Уход</summary>
-            <div>
-              {/* TODO: уточнить у заказчика рекомендации по уходу */}
-              Протирайте влажной мягкой тканью. Не используйте абразивные губки и не мойте в посудомоечной машине.
+            {/* текст заказчика, 17.11 */}
+            <div className="care">
+              <p>Изделия из экологичного пластика PLA, поэтому:</p>
+              <ul>
+                <li>выдерживают температуру до +50 °C;</li>
+                <li>не оставляйте их надолго под прямыми солнечными лучами;</li>
+                <li>используйте деликатные чистящие средства, без абразивов;</li>
+                <li>берегите от падений и ударов сбоку, особенно резьбу и тонкие соединения.</li>
+              </ul>
+              <p>
+                Не рекомендуем прямой контакт с жидкими и текучими продуктами (вода, крем, начинки): на изделие кладём только
+                сухое и готовое, например орешки, или используем подложку либо кальку.
+              </p>
+              <p>
+                Чистка: протирайте спиртом или влажными салфетками, сухая и слегка влажная уборка. Не замачивайте и не мойте под
+                краном: при печати слоями остаются поры и микрошвы, куда может попасть вода.
+              </p>
             </div>
           </details>
         </div>

@@ -235,7 +235,7 @@ function stackLayout<T extends { v: PartVisual }>(items: T[]) {
 
 /* ---------------- Sloyka Podium: модульные столики ---------------- */
 
-type Part = "podium" | "leg" | "top" | "insert" | "balls1" | "balls2";
+type Part = "podium" | "leg" | "top" | "insert" | "balls1" | "balls2" | "spare";
 
 const codeColor = (id: string) => allColors.findIndex((c) => c.id === id).toString(36);
 const colorFromCode = (s: string) => allColors[parseInt(s, 36)]?.id;
@@ -247,8 +247,12 @@ function HomeBuilder() {
   const [mainLeg, setMainLeg] = useState<LegId>("muff");
   const [topLeg, setTopLeg] = useState<LegId | null>("pumpkin");
   const [extra, setExtra] = useState<HomeExtraId | null>(null);
-  const [colors, setColors] = useState<Record<Part, string>>({ podium: "white", leg: "cherry", top: "pumpkin-spice", insert: "white", balls1: "white", balls2: "cherry" });
+  const [colors, setColors] = useState<Record<Part, string>>({ podium: "white", leg: "cherry", top: "pumpkin-spice", insert: "white", balls1: "white", balls2: "cherry", spare: "cherry" });
   const [paint, setPaint] = useState<Part>("podium");
+  // доп. шарики BonBon (заказчик, 17.11): отдельным набором одного цвета, 6 или 12 шт.
+  const [spare, setSpare] = useState<"6" | "12" | null>(null);
+  const spareProduct = productBySlug("bonbon-balls");
+  const spareOpt = spare && podium === "bonbon" ? spareProduct?.options?.find((o) => o.id === spare) : undefined;
 
   // ?preset=slug — готовая сборка из каталога; ?b=код — сборка по коду
   useEffect(() => {
@@ -277,7 +281,7 @@ function HomeBuilder() {
       setMainLeg(p.constructorPreset.legs[0]);
       setTopLeg(p.constructorPreset.legs[1] ?? null);
       setExtra(p.constructorPreset.extra ?? null);
-      setColors({ podium: art.podiumColor, leg: art.legColor, top: art.legColor, insert: art.podiumColor, balls1: "white", balls2: art.legColor });
+      setColors({ podium: art.podiumColor, leg: art.legColor, top: art.legColor, insert: art.podiumColor, balls1: "white", balls2: art.legColor, spare: art.legColor });
     }
   }, []);
 
@@ -300,6 +304,7 @@ function HomeBuilder() {
     [`Ножка ${L.name} · ${colorById(colors.leg).name}`, L.price],
     ...(E ? [[`${E.name} · ${colorById(colors.insert).name}`, E.price] as [string, number]] : []),
     ...(P.id === "bonbon" ? [[`Шарики · ${colorById(colors.balls1).name} / ${colorById(colors.balls2).name}`, 0] as [string, number]] : []),
+    ...(spareOpt ? [[`Доп. шарики ${spareOpt.id} шт · ${colorById(colors.spare).name}`, spareOpt.price] as [string, number]] : []),
   ];
   const total = lines.reduce((s, [, p]) => s + p, 0);
   const height = L.height + (T?.height ?? 0);
@@ -310,7 +315,7 @@ function HomeBuilder() {
     { id: "podium", title: "Подиум", value: P.name },
     { id: "leg", title: "Ножка", value: `${L.name}, ${L.height} см` },
     { id: "top", title: "Второй ярус", value: T ? T.name : "нет" },
-    { id: "extra", title: "Детали", value: E ? E.name : "нет" },
+    { id: "extra", title: "Детали", value: E ? E.name : spareOpt ? `шарики ×${spareOpt.id}` : "нет" },
     { id: "colors", title: "Цвета", value: [colors.podium, colors.leg].map((c) => colorById(c).name).join(" / ") },
   ];
   const order = steps.map((s) => s.id);
@@ -322,6 +327,7 @@ function HomeBuilder() {
     { id: "leg", label: `Ножка ${L.name}` },
     ...(E && E.id !== "attico" ? [{ id: "insert" as Part, label: E.name }] : []),
     ...(P.id === "bonbon" ? [{ id: "balls1" as Part, label: "Шарики ½ №1" }, { id: "balls2" as Part, label: "Шарики ½ №2" }] : []),
+    ...(spareOpt ? [{ id: "spare" as Part, label: "Доп. шарики" }] : []),
   ];
 
   return (
@@ -405,8 +411,26 @@ function HomeBuilder() {
           )}
 
           {step === "extra" &&
-            (availableExtras.length === 0 ? (
-              <p className="muted">Для подиума Bonbon дополнительных деталей нет — переходите к цветам.</p>
+            (podium === "bonbon" ? (
+              <>
+                <p className="muted small">Запасной набор шариков одного цвета — чтобы менять цвет столика или заменить потерянные. Цвет выберете на шаге «Цвета».</p>
+                <div className="cfg-grid">
+                  <Card active={spare === null} onClick={() => setSpare(null)} title="Без доп. шариков" price={0} />
+                  {(spareProduct?.options ?? []).map((o) => (
+                    <Card
+                      key={o.id}
+                      active={spare === o.id}
+                      onClick={() => setSpare(o.id as "6" | "12")}
+                      title={`Доп. шарики · ${o.id} шт`}
+                      sub="один цвет"
+                      price={o.price}
+                      art={<Thumb layers={[{ src: podiumVisuals.bonbon.overlays!.balls2, color: colors.spare }]} />}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : availableExtras.length === 0 ? (
+              <p className="muted">Для подиума {P.name} дополнительных деталей нет — переходите к цветам.</p>
             ) : (
               <div className="cfg-grid">
                 <Card active={extra === null} onClick={() => setExtra(null)} title="Без деталей" price={0} />
@@ -440,7 +464,7 @@ function HomeBuilder() {
                 ))}
               </div>
               <ColorGrid value={colors[paint]} onChange={(c) => setColors((prev) => ({ ...prev, [paint]: c }))} />
-              <button type="button" className="link-btn" onClick={() => setColors((p) => ({ ...p, leg: p.podium, top: p.podium, insert: p.podium, balls1: p.podium, balls2: p.podium }))}>
+              <button type="button" className="link-btn" onClick={() => setColors((p) => ({ ...p, leg: p.podium, top: p.podium, insert: p.podium, balls1: p.podium, balls2: p.podium, spare: p.podium }))}>
                 Сделать всё в цвет подиума
               </button>
             </>
@@ -453,17 +477,30 @@ function HomeBuilder() {
           lines={lines}
           nextLabel={next ? steps.find((s) => s.id === next)!.title : undefined}
           onNext={next ? () => setStep(next) : undefined}
-          onAdd={() =>
+          onAdd={() => {
+            const main = spareOpt ? lines.slice(0, -1) : lines;
             add({
               key: `home:${code}`,
               name: `Сборка ${name}`,
-              price: total,
-              details: [...lines.map(([n]) => n), `Код сборки: ${code}`],
+              price: total - (spareOpt?.price ?? 0),
+              details: [...main.map(([n]) => n), `Код сборки: ${code}`],
               image: `/products/podium-${podium}.webp`,
               art: { type: "table", podium, legs: T ? [mainLeg, T.id] : [mainLeg], podiumColor: colors.podium, legColor: colors.leg, extra: extra ?? undefined },
               ref: { kind: "home", podium, legs: T ? [mainLeg, T.id] : [mainLeg], extra },
-            })
-          }
+            });
+            // доп. шарики — отдельной позицией каталога (цену проверяет сервер)
+            if (spareOpt && spareProduct)
+              add({
+                key: ["bonbon-balls", spareOpt.id, colors.spare].join(":"),
+                slug: "bonbon-balls",
+                name: spareProduct.name,
+                price: spareOpt.price,
+                details: [`Размер: ${spareOpt.label}`, `Цвет: ${colorById(colors.spare).name}`],
+                image: spareProduct.image,
+                art: spareProduct.art?.type === "table" ? { ...spareProduct.art, podiumColor: colors.spare, legColor: colors.spare } : spareProduct.art,
+                ref: { kind: "product", slug: "bonbon-balls", option: spareOpt.id },
+              });
+          }}
         />
       </div>
     </div>

@@ -37,6 +37,7 @@ export function CatalogView({ products }: { products: Product[] }) {
   const [cat, setCat] = useState<string>("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<Sort>("default");
+  const [ready, setReady] = useState(false);
 
   // ?line=…&cat=… из ссылок на главной, ?q= из поиска в шапке
   useEffect(() => {
@@ -45,7 +46,22 @@ export function CatalogView({ products }: { products: Product[] }) {
     if (p && (p === "promo" || (lineOrder as string[]).includes(p))) setTab(p as Tab);
     if (s.get("cat")) setCat(s.get("cat")!);
     if (s.get("q")) setQ(s.get("q")!);
+    const so = s.get("sort");
+    if (so === "cheap" || so === "expensive") setSort(so as Sort);
+    setReady(true);
   }, []);
+
+  // выбранный раздел — в адрес страницы: «Назад» из карточки товара вернёт в тот же раздел (заказчик, 17.11)
+  useEffect(() => {
+    if (!ready) return;
+    const s = new URLSearchParams();
+    if (tab !== "all") s.set("line", tab);
+    if (cat !== "all") s.set("cat", cat);
+    if (q) s.set("q", q);
+    if (sort !== "default") s.set("sort", sort);
+    const url = `${window.location.pathname}${s.toString() ? `?${s}` : ""}`;
+    if (url !== window.location.pathname + window.location.search) window.history.replaceState(window.history.state, "", url);
+  }, [ready, tab, cat, q, sort]);
 
   // наборы из разных линеек (promoOnly) — только во «Всех товарах» и «Акциях»
   const inLine = (p: Product, line: Tab) => p.line === line && !p.promoOnly;

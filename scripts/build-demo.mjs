@@ -17,6 +17,30 @@ for (const name of ["src", "public", "prisma", "scripts", "package.json", "tscon
 }
 symlinkSync(join(root, "node_modules"), join(tmp, "node_modules"), "junction");
 
+// подбор цветов палитры работает без сервера — в демо открываем его по ссылке /colors (без пароля, ничего не сохраняет)
+mkdirSync(join(tmp, "src/app/colors"), { recursive: true });
+cpSync(join(tmp, "src/app/admin/(panel)/colors/ColorTuner.tsx"), join(tmp, "src/app/colors/ColorTuner.tsx"));
+writeFileSync(
+  join(tmp, "src/app/colors/page.tsx"),
+  `import type { Metadata } from "next";
+import { ColorTuner } from "./ColorTuner";
+export const metadata: Metadata = { title: "Подбор цветов", robots: { index: false, follow: false } };
+export default function ColorsPage() {
+  return (
+    <div className="container page">
+      <h1>Подбор цветов палитры</h1>
+      <p className="admin-note">
+        Впишите HEX или подберите цвет пипеткой, пока рендер не станет похож на настоящий пластик. Справа можно положить фото
+        изделия для сравнения (оно никуда не загружается). Изменения запоминаются в этом браузере. Когда всё готово — нажмите
+        «Скопировать изменения» и пришлите текст разработчику.
+      </p>
+      <ColorTuner />
+    </div>
+  );
+}
+`,
+);
+
 // на статическом сайте нет сервера: убираем API и админку
 rmSync(join(tmp, "src/app/api"), { recursive: true, force: true });
 rmSync(join(tmp, "src/app/admin"), { recursive: true, force: true });

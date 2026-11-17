@@ -44,7 +44,9 @@ export const srParts: Record<string, [number, number, number, number]> = {
   "diadem-pusety-r": [1026, 217, 191, 382],
   "diadem-chains-l": [788, 64, 227, 487],
   "diadem-chains-r": [1009, 114, 227, 488],
-  "crown-post": [668, 284, 580, 780],
+  "crown-post": [668, 284, 580, 780], // общий габарит стоек — по нему ставим корону
+  "crown-post-l": [668, 284, 580, 780], // левая стойка с переходником — за подиумами
+  "crown-post-r": [1162, 391, 60, 655], // правая стойка — перед подиумами (заказчик, 14.11)
   // маркиза — 6 полос слева направо (рендер заказчика 13.11): нечётные — цвет 1, чётные — цвет 2
   "crown-s1": [661, 178, 162, 192],
   "crown-s2": [745, 197, 162, 192],
@@ -129,7 +131,7 @@ export function standScene({ base, slots, colors, inserts }: StandSceneInput) {
   put("legs-r", b.R, colors.legs, neg);
   if (b.logoR && colors.logo) put("logo-r", b.logoR, colors.logo, neg);
   // корона: переходник надевается на обе боковины сверху, на него — верхний подиум; стойки сзади (заказчик, 11.11)
-  if (colors.crown) put("crown", "crown-post", colors.crown.post, crownD);
+  if (colors.crown) put("crown", "crown-post-l", colors.crown.post, crownD);
   // ярусы: дальние (верхние) раньше, ближние позже
   for (let k = 0; k < levels; k++) {
     const id = slots[k];
@@ -148,6 +150,7 @@ export function standScene({ base, slots, colors, inserts }: StandSceneInput) {
     }
   }
   if (colors.crown) {
+    put("crown-r", "crown-post-r", colors.crown.post, crownD);
     // каждая следующая полоса перекрывает предыдущую (видим их правые торцы)
     for (let i = 1; i <= 6; i++) put(`cap${i}`, `crown-s${i}`, i % 2 ? colors.crown.cap1 : colors.crown.cap2, crownD);
   }

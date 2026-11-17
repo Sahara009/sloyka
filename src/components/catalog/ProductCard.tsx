@@ -3,6 +3,7 @@ import { effectivePrice, hasPriceFrom, promoActive, type Product } from "@/data/
 import { ProductVisual } from "@/components/art/ProductArt";
 import { Shape, type ShapeName } from "@/components/ui/Shape";
 import { formatPrice } from "@/lib/format";
+import { CropPhoto } from "@/components/ui/Photo";
 
 const shapes: ShapeName[] = ["quatrefoil", "arch-scallop", "clover", "scallop"];
 const tones = [
@@ -18,16 +19,21 @@ export function ProductCard({ product, index = 0, simple }: { product: Product; 
   const tone = tones[index % tones.length];
   const from = hasPriceFrom(product);
   // фото с фоном — в спокойную арку, чтобы узорная маска его не съедала
-  const isPhoto = !!product.image?.startsWith("/photos/");
+  const pic = product.cover ?? product.image;
+  const isPhoto = !!pic?.startsWith("/photos/");
   return (
     <Link href={`/catalog/${product.slug}`} className={`pcard ${simple ? "pcard--simple" : ""}`}>
       {simple ? (
         <span className={`pcard__box ${isPhoto ? "pcard__box--photo" : ""}`}>
-          <ProductVisual product={product} className={isPhoto ? "pcard__photo" : "pcard__art"} />
+          {isPhoto && pic ? (
+            <CropPhoto src={pic} alt={product.name} className="pcard__photo" />
+          ) : (
+            <ProductVisual product={product} image={pic} className="pcard__art" />
+          )}
         </span>
       ) : (
       <Shape shape={isPhoto ? "arch" : shapes[index % shapes.length]} outline={tone.outline} bg={tone.bg} stroke={4}>
-        <ProductVisual product={product} className={isPhoto ? "pcard__photo" : "pcard__art"} />
+        <ProductVisual product={product} image={pic} className={isPhoto ? "pcard__photo" : "pcard__art"} />
       </Shape>
       )}
       {promoActive(product) ? (

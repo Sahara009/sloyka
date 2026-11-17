@@ -83,6 +83,8 @@ export type Product = {
   description: string;
   specs: string[];
   /** Главное фото без фона */
+  /** фото-обложка для карточки в каталоге (живое фото изделия); на странице товара — первым фото после рендера */
+  cover?: string;
   image?: string;
   /** Дополнительные фото (интерьер, другие ракурсы) */
   gallery?: string[];
@@ -882,6 +884,22 @@ const marketStands: StandDef[] = [
 ];
 
 const marketProducts: Product[] = [
+  // Леон — первым: новинка, иначе до него не долистывают (заказчик, 17.11)
+  {
+    slug: "stand-leon",
+    name: "Леон",
+    line: "market",
+    series: "stands",
+    kind: "set",
+    price: 3500,
+    short: "Самостоятельная стойка: 2 подиума, ножки и логотип",
+    description: "Отдельная модель вне конструктора: два подиума-полки на ножках с вашим логотипом.",
+    specs: ["Габариты: 29 × 26 × 20,5 см", "Полка: 29 × 13 см", "Этажи: 10,5 и 20,5 см", "Материал: экологичный пластик PLA"],
+    // впадина под логотип — часть ножек, логотип вклеивается отдельным кругом по макету (заказчик, 11.11)
+    zones: [{ id: "p1", label: "Подиум сверху" }, { id: "p2", label: "Подиум снизу" }, { id: "legs", label: "Ножки" }, { id: "logo", label: "Логотип", sameAs: "legs" }],
+    art: { type: "stand", levels: 2, colors: ["marzipan", "marzipan"] },
+    isNew: true,
+  },
   ...marketStands.map<Product>((s) => {
     const base = marketBases.find((b) => b.id === s.base)!;
     const counts = s.podiums.reduce<Record<string, number>>((acc, id) => ((acc[id] = (acc[id] ?? 0) + 1), acc), {});
@@ -905,21 +923,6 @@ const marketProducts: Product[] = [
       logoGift: s.base === "paris" || undefined,
     };
   }),
-  {
-    slug: "stand-leon",
-    name: "Леон",
-    line: "market",
-    series: "stands",
-    kind: "set",
-    price: 3500,
-    short: "Самостоятельная стойка: 2 подиума, ножки и логотип",
-    description: "Отдельная модель вне конструктора: два подиума-полки на ножках с вашим логотипом.",
-    specs: ["Габариты: 29 × 26 × 20,5 см", "Полка: 29 × 13 см", "Этажи: 10,5 и 20,5 см", "Материал: экологичный пластик PLA"],
-    // впадина под логотип — часть ножек, логотип вклеивается отдельным кругом по макету (заказчик, 11.11)
-    zones: [{ id: "p1", label: "Подиум сверху" }, { id: "p2", label: "Подиум снизу" }, { id: "legs", label: "Ножки" }, { id: "logo", label: "Логотип", sameAs: "legs" }],
-    art: { type: "stand", levels: 2, colors: ["marzipan", "marzipan"] },
-    isNew: true,
-  },
   {
     slug: "wheel-carnival",
     name: "Колесо фортуны «Карнавал»",
@@ -979,6 +982,7 @@ const marketProducts: Product[] = [
 const decorProducts: Product[] = [
   {
     slug: "sign",
+    cover: photo("cover-sign"),
     name: "Вывеска с логотипом",
     line: "market",
     series: "decor",
@@ -1000,6 +1004,7 @@ const decorProducts: Product[] = [
   },
   {
     slug: "table-tent",
+    cover: photo("cover-table-tent"),
     name: "Тейблтент",
     line: "market",
     series: "decor",
@@ -1082,6 +1087,7 @@ const artProducts: Product[] = [
   ),
   {
     slug: "waffle-tray",
+    cover: photo("cover-waffle-tray"),
     name: "Монетница Waffle Jewellery Tray",
     line: "home",
     series: "waffle",
@@ -1286,9 +1292,11 @@ const topperProducts: Product[] = [
       { id: "big", label: "Большой", price: 130, image: photo("topper-hb-topper-green") },
       { id: "small", label: "Маленький", price: 100, image: photo("topper-hb-small-pink-butter") },
     ],
+    // 3 цвета: основа, «HAPPY», «Birthday» (заказчик, 17.11)
     zones: [
       { id: "base", label: "Основа" },
-      { id: "text", label: "Надпись" },
+      { id: "happy", label: "Надпись «HAPPY»" },
+      { id: "birthday", label: "Надпись «Birthday»" },
     ],
     isNew: true,
   },
@@ -1302,21 +1310,24 @@ const topperProducts: Product[] = [
     price: 100,
     priceFrom: true,
     short: "Леденец на шпажке: спираль, вертушка или лучи",
-    description: "Плоский топпер-леденец с белыми полосками. Хорошо смотрится россыпью из нескольких цветов.",
-    specs: ["Большой — 130 ₽, 3 дизайна: спираль, вертушка, лучи", "Маленький — 100 ₽, 2 дизайна: спираль, вертушка", "Материал: экологичный пластик PLA"],
+    description: "Плоский топпер-леденец на шпажке. Основа и рисунок — двух цветов на ваш выбор. Хорошо смотрится россыпью из нескольких цветов.",
+    specs: ["Большой — 130 ₽", "Маленький — 100 ₽", "3 дизайна: спираль, вертушка, лучи", "Два цвета: основа и рисунок", "Материал: экологичный пластик PLA"],
     image: photo("topper-lollipops"),
     options: [
       { id: "big", label: "Большой", price: 130 },
       { id: "small", label: "Маленький", price: 100 },
     ],
-    // у маленького нет «лучей» — подсказка в specs, состав проверяем при заказе
+    // все 3 дизайна — и большой, и маленький; два цвета: основа и рисунок (заказчик, 17.11)
     variantLabel: "Дизайн",
     variants: [
       { id: "spiral", name: "Спираль", swatch: "" },
       { id: "swirl", name: "Вертушка", swatch: "" },
-      { id: "rays", name: "Лучи (только большой)", swatch: "" },
+      { id: "rays", name: "Лучи", swatch: "" },
     ],
-    colors: "one",
+    zones: [
+      { id: "base", label: "Основа" },
+      { id: "pattern", label: "Рисунок" },
+    ],
     isNew: true,
   },
   {
@@ -1485,6 +1496,7 @@ const threeColors: ColorZone[] = [
 const promoSets: Product[] = [
   {
     slug: "promo-bon-paris",
+    cover: photo("cover-bon-paris"),
     logoGift: true,
     promoOnly: true,
     name: "Бон-Париж",
@@ -1519,6 +1531,8 @@ const promoSets: Product[] = [
   },
   {
     slug: "promo-marseillaise",
+    cover: photo("cover-marseillaise"),
+    gallery: [photo("marseillaise-purple")],
     logoGift: true,
     promoOnly: true,
     name: "Марсельеза",
@@ -1631,6 +1645,55 @@ export function familyOf(slug: string): Family | undefined {
 
 /* ================= Всё вместе ================= */
 
+/** Живые фото-обложки для товаров, которые собираются генераторами (заказчик, 17.11): обложка + доп. фото в галерею */
+const coverPhotos: Record<string, [string, string[]?]> = {
+  "promo-pa-paris": ["cover-pa-paris"],
+  "stand-paris-marquise": ["cover-paris", ["paris-zinacooks", "paris-pink-bears"]],
+  "penny-logo": ["cover-penny-logo"],
+  "penny-logo-set": ["cover-penny-logo"],
+  "stand-signorina": ["cover-signorina"],
+  "penny-set": ["penny-same-size", ["penny-combo-3"]],
+  "stand-dolce-vita": ["dolce-vita-1", ["dolce-vita-2"]],
+  // неподписанные фото заказчика (17.11), разобраны по изделиям
+  "podium-milano": ["milano-pair-pink", ["milano-blue"]],
+  milano: ["cover-milano", ["milano-blue", "milano-pair-pink"]],
+  rossi: ["cover-rossi"],
+  "podium-rossi": ["cover-rossi"],
+  "classic-muffin": ["cover-muffin", ["muffin-yanni"]],
+  "classic-marble": ["cover-marble", ["marble-bentodel"]],
+  "willy-wonka": ["cover-willy-wonka"],
+  modular: ["cover-modular", ["modular-tower"]],
+  "modular-plus": ["modular-plus-white", ["modular-tower"]],
+  "podium-i-stand": ["cover-podium-i"],
+  "podium-i": ["cover-podium-i"],
+  penny: ["penny-stack-brown"],
+  minies: ["minies-stack-flower", ["minies-tops"]],
+  "minies-set": ["minies-stack-round", ["minies-stack-flower"]],
+  "stand-leon": ["cover-leon"],
+  "fleur-stand": ["fleur-stand-white"],
+  "bonbon-stand": ["bonbon-stand-pink"],
+  "bon-fleur": ["bon-fleur-brown"],
+  "podium-bonbon": ["bonbon-podium-pink", ["bonbon-podium-pair", "bonbon-podium-mauve"]],
+  "bonbon-balls": ["bonbon-podium-mauve", ["bonbon-podium-pair"]],
+  "podium-fleur": ["podium-fleur-brown"],
+  "podium-cappottina": ["podium-cappottina-brown"],
+  "extra-nuts": ["insert-nuts-photo"],
+  "extra-honey": ["insert-honey-photo"],
+  "extra-flower": ["insert-flower-photo"],
+  "cachette-set-4": ["cachette-set-pastel", ["cachette-set-8"]],
+  "cachette-set-8": ["cachette-set-8"],
+  "cachette-set-12": ["cachette-set-pastel", ["cachette-set-8"]],
+  ...Object.fromEntries(["grande", "piccola", "pumpkin", "souffle", "muff"].map((l) => [`leg-${l}`, [`legs-all`, []] as [string, string[]]])),
+};
+function withCover(p: Product): Product {
+  const c = coverPhotos[p.slug];
+  if (!c) return p;
+  const cover = photo(c[0]);
+  const rest = (p.gallery ?? []).filter((x) => x !== cover);
+  const extra = (c[1] ?? []).map(photo).filter((x) => !rest.includes(x) && x !== cover);
+  return { ...p, cover, gallery: [...extra, ...rest] };
+}
+
 export const products: Product[] = ([
   ...setProducts,
   ...classicProducts,
@@ -1643,7 +1706,7 @@ export const products: Product[] = ([
   ...promoSets,
   ...decorProducts,
   ...partProducts,
-] as Product[]).map((p) => withLayers(p, zonesOf));
+] as Product[]).map((p) => withCover(withLayers(p, zonesOf)));
 
 export const lineTitles: Record<Line, string> = {
   home: "Sloyka Home",
