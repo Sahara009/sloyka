@@ -5,9 +5,9 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Shape } from "@/components/ui/Shape";
 import { Ticker } from "@/components/ui/Ticker";
 
-export const metadata: Metadata = { title: "История бренда", description: "Как появилась Sloyka и почему наши столики собираются как конструктор.", alternates: { canonical: "/about" } };
+export const metadata: Metadata = { title: "История бренда", description: "Sloyka — семейный бренд из Санкт-Петербурга: авторские подставки, подиумы, фотореквизит и предметы декора из пластика.", alternates: { canonical: "/about" } };
 
-// TODO: тексты истории бренда пришлёт заказчик — ниже заглушки той же длины
+// Тексты — заказчик, 26.11
 export default function AboutPage() {
   return (
     <>
@@ -16,11 +16,14 @@ export default function AboutPage() {
           <Reveal effect="left">
             <p className="eyebrow">История бренда</p>
             <h1>
-              <span className="script">Как появилась</span> Sloyka
+              <span className="script">Привет,</span> мы Sloyka!
             </h1>
             <p className="lead">
-              Здесь будет история бренда: с чего всё началось, кто стоит за Sloyka и почему мы решили делать подставки,
-              которые собираются как конструктор.
+              Семейный бренд из Санкт-Петербурга, который начался с любви к эстетике и желания создавать красивые и
+              функциональные вещи.
+            </p>
+            <p className="lead">
+              Сегодня мы разрабатываем и производим авторские подставки, подиумы, фотореквизит и предметы декора из пластика.
             </p>
           </Reveal>
           <Reveal effect="drip">
@@ -79,7 +82,8 @@ export default function AboutPage() {
         <div className="container">
           <Reveal effect="fade">
             <blockquote>
-              «Место для цитаты основателя бренда — пара тёплых предложений о том, ради чего всё это.»
+              «Для нас Sloyka — это не просто подставки и декор, а возможность создавать пространство, в котором каждый продукт
+              выглядит по-особенному.»
             </blockquote>
           </Reveal>
           <Link href="/catalog" className="btn">

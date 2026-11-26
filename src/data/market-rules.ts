@@ -28,7 +28,7 @@ export function tierOf(i: number, n: number, levels: number): number {
 }
 export const tierName = (t: number) => (t === 0 ? "Приставной" : `Ярус ${t}`);
 
-const tall = ["tribune-2", "tribune-3", "amphitheatre", "agora"];
+const tall = ["tribune-2", "tribune-3", "amphitheatre", "amphitheatre-6", "agora"];
 const narrow = ["marquise-21", "marseille-21"];
 /** Подиумы с выносом (матрица: «вынос 0,5 см» у Маркиз, «1 см» у Марселей и Каскадов) */
 const overhang = ["marquise-21", "marquise-25", "marseille-21", "marseille-25", "cascade-1", "cascade-2", "cascade-3"];

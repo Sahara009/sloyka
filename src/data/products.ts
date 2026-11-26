@@ -45,6 +45,8 @@ export type SizeOption = {
   group?: string;
   /** Своё фото/форма для размера (у Marble и Muffin 28 и 30 см — «приплюснутая» форма) */
   image?: string;
+  /** Живое фото этой формы: показывается при выборе размера (Marble и Muffin L/XL — заказчик, 23.11) */
+  photo?: string;
   /** Слои деталей для этого размера (см. ColorZone.layer) */
   layers?: Record<string, string>;
   /** Логотип на этом размере не делается (Muffin и Marble 10 см — по матрице 03.11) */
@@ -91,6 +93,8 @@ export type Product = {
   art?: Art;
   hit?: boolean;
   isNew?: boolean;
+  /** Скрыт из каталога, поиска и переключателей (карточка остаётся, открывается по прямой ссылке) */
+  hidden?: boolean;
   /** Выбор размера — цена меняется */
   options?: SizeOption[];
   /** Выбор глазури с фото */
@@ -378,8 +382,9 @@ const partProducts: Product[] = [
     short: familyText[p.id as keyof typeof familyText]?.short ?? p.note,
     description: familyText[p.id as keyof typeof familyText]?.description ?? `${p.note}. Подходит ко всем ножкам Sloyka Podium.`,
     specs: [
-      { bonbon: "Ø 24 см (полезная зона Ø 21,5 см), высота 1,5 см", fleur: "Ø 24 см (полезная зона Ø 19 см), высота 2 см", cappottina: "Ø 27 см (полезная зона Ø 24 см), высота 5 см" }[p.id],
+      { bonbon: "Ø 24 см (полезная зона Ø 21,5 см), высота 1,5 см", fleur: "Ø 24 см (полезная зона Ø 19 см), высота 2 см", cappottina: "Ø 27 см (полезная зона Ø 24 см), высота 5 см", classic: "Ø 24 см" }[p.id],
       ...(p.id === "cappottina" ? ["Логотип: +500 ₽ (врезной)"] : []),
+      ...(p.id === "classic" ? ["Подходит ко всем ножкам Sloyka Podium", "Логотип на торце: +500 ₽"] : []),
       ...(p.id === "fleur" ? ["Доп. вкладыши: Nuts 800 ₽, Honey 700 ₽, Flower 750 ₽"] : []),
       ...(p.id === "bonbon" ? ["Доп. шарики: 6 шт — 150 ₽, 12 шт — 300 ₽"] : []),
       "Материал: экологичный пластик PLA",
@@ -390,9 +395,9 @@ const partProducts: Product[] = [
         : p.id === "fleur"
           ? [{ id: "top", label: "Подиум" }, insertZone]
           : undefined,
-    isNew: p.id === "cappottina" || undefined,
-    logoAddon: p.id === "cappottina" || undefined,
-    logoFlat: p.id === "cappottina" ? 500 : undefined,
+    isNew: p.id === "cappottina" || p.id === "classic" || undefined,
+    logoAddon: p.id === "cappottina" || p.id === "classic" || undefined,
+    logoFlat: p.id === "cappottina" || p.id === "classic" ? 500 : undefined,
     image: img(`podium-${p.id}`),
     gallery: ({ bonbon: [photo("bonbon-podium-pink"), photo("bonbon-balls-2")], fleur: [photo("fleur-tower")] } as Record<string, string[]>)[p.id],
     art: { type: "table", podium: p.id, legs: [], podiumColor: "marzipan", legColor: "marzipan" },
@@ -473,11 +478,11 @@ const classicSizes: SizeRow[] = [
  * остальные размеры — вытянутые. Для L и XL подставляется своё фото `squat`.
  * TODO: фото приплюснутой формы Marble (у Muffin есть), слои деталей обеих форм — от заказчика.
  */
-const classicOptions = (col: 2 | 3, squat?: string): SizeOption[] =>
+const classicOptions = (col: 2 | 3, squat?: string, squatPhoto?: string): SizeOption[] =>
   classicSizes.map((r) => {
     const id = r[0].replace(/\D+/g, "");
     const isSquat = id === "28" || id === "30";
-    return { id, label: r[0], group: r[1], price: r[col], ...(id === "10" ? { noLogo: true } : {}), ...(isSquat && squat ? { image: squat } : {}) };
+    return { id, label: r[0], group: r[1], price: r[col], ...(id === "10" ? { noLogo: true } : {}), ...(isSquat && squat ? { image: squat } : {}), ...(isSquat && squatPhoto ? { photo: squatPhoto } : {}) };
   });
 
 /** Цена логотипа по матрице 03.11: 12–18 см — 300 ₽, 20–30 см — 500 ₽ (на 10 см логотипа нет — noLogo) */
@@ -498,6 +503,7 @@ const classicHeights: Record<string, string> = { "10": "6", "12": "7", "14": "8"
 const classicSpecs = [
   ...classicSizes.map((r) => `${r[1]} ${r[0]}: высота ${classicHeights[r[0].replace(/\D+/g, "")]} см`),
   "Логотип: +300 ₽ (12–18 см), +500 ₽ (20–30 см); на 10 см — без логотипа",
+  "L 28 и XL 30 — другая форма: ниже и шире (на фото с подписями «Кстати торт» и «Торты Катрин»)",
   "Красятся отдельно: столешница, ножка и логотип",
   "Материал: экологичный пластик PLA",
 ];
@@ -515,7 +521,7 @@ const classicProducts: Product[] = [
     specs: classicSpecs,
     image: img("classic-muffin"),
     gallery: [img("classic-muffin-l"), photo("muffin-butter"), photo("muffin-logo-pink"), photo("muffin-logo-mocha")],
-    options: classicOptions(2, img("classic-muffin-l")),
+    options: classicOptions(2, img("classic-muffin-l"), photo("cover-muffin")),
     colors: "two",
     logoAddon: true,
     logoZone: true,
@@ -533,7 +539,7 @@ const classicProducts: Product[] = [
       "Модель со строгими архитектурными линиями, визуально напоминающая мраморный столб. Это незаменимый реквизит для ресторанов, статусных презентаций, стильных фуршетов и велком-зон. Модель выпускается в нескольких размерах (включая увеличенные форматы L и XL), а также адаптирована для нанесения ваших логотипов! Он сочетает в себе визуальную тяжесть камня и практичную лёгкость современных материалов.",
     specs: classicSpecs,
     image: img("classic-marble"),
-    options: classicOptions(3),
+    options: classicOptions(3, undefined, photo("cover-marble")),
     colors: "two",
     logoAddon: true,
     logoZone: true,
@@ -788,9 +794,9 @@ const designProducts: Product[] = [
     gallery: [photo("minies-sets-milk"), photo("minies-stack")],
     specs: ["Ø 10 см, высота 2,5 см", "Формы: Flower, Wave, Cookie", "Материал: экологичный пластик PLA"],
     options: [
-      { id: "flower", label: "Flower", price: 350 },
-      { id: "wave", label: "Wave", price: 350 },
-      { id: "cookie", label: "Cookie", price: 350 },
+      { id: "flower", label: "Flower", price: 350, image: photo("minies-one-4") },
+      { id: "wave", label: "Wave", price: 350, image: photo("minies-one-3") },
+      { id: "cookie", label: "Cookie", price: 350, image: photo("minies-one-1") },
     ],
     zones: [{ id: "top", label: "Подиум" }, { id: "balls", label: "Шарики" }],
   },
@@ -825,7 +831,7 @@ const marketPrice = (base: string, ids: string[], withCrown = false) =>
   ids.reduce((s, id) => s + marketPodiums.find((p) => p.id === id)!.price, 0) +
   (withCrown ? crown.price : 0);
 
-type StandDef = { slug: string; name: string; base: string; podiums: string[]; crown?: boolean; image?: string; hit?: boolean; isNew?: boolean; size: string; price?: number; zones?: ColorZone[] };
+type StandDef = { slug: string; name: string; base: string; podiums: string[]; crown?: boolean; image?: string; hit?: boolean; isNew?: boolean; hidden?: boolean; size: string; price?: number; zones?: ColorZone[] };
 
 /**
  * Зоны цвета готовой стойки (заказчик, 03.11): каждый подиум отдельно, ножки, логотип у Парижа, корона.
@@ -872,13 +878,13 @@ const marketStands: StandDef[] = [
   { slug: "stand-paris-marquise", name: "Париж", base: "paris", podiums: ["marquise-21", "marquise-21", "marquise-21"], image: "stand-paris", hit: true, size: "21,5 × 21 × 17 см" },
   // цена по деталям — 3450 ₽ (в матрице было 3350, заказчик подтвердил 3450 — 03.11)
   { slug: "stand-paris-boutique", name: "Бутик", base: "paris", podiums: ["loge-3", "loge-2", "diadem"], size: "21 × 25 × 35,5 см" },
-  { slug: "stand-parisienne", name: "Парижанка", base: "paris", podiums: ["cascade-3", "cascade-3", "cascade-3"], size: "22 × 25 × 21,5 см" },
+  { slug: "stand-parisienne", name: "Парижанка", hidden: true, base: "paris", podiums: ["cascade-3", "cascade-3", "cascade-3"], size: "22 × 25 × 21,5 см" },
   { slug: "stand-florence-marseille", name: "Флоренция", base: "florence", podiums: ["marseille-25", "marseille-25"], image: "stand-florence", size: "15 × 25 × 15 см" },
   { slug: "stand-signorina", name: "Синьорина", base: "florence", podiums: ["marquise-25", "marquise-25"], image: "stand-florence-marquise", size: "14,5 × 25 × 15 см" },
-  { slug: "stand-francesco", name: "Франческо", base: "florence", podiums: ["cascade-2", "cascade-2", "cascade-2"], crown: true, size: "22 × 25 × 43 см" },
+  { slug: "stand-francesco", name: "Франческо", hidden: true, base: "florence", podiums: ["cascade-2", "cascade-2", "cascade-2"], crown: true, size: "22 × 25 × 43 см" },
   { slug: "stand-dolce-vita", name: "Дольче Вита", base: "florence", podiums: ["tribune-2", "amphitheatre", "tribune-3"], size: "21 × 25 × 24 см" },
   { slug: "stand-babylon-tribune", name: "Вавилон", base: "babylon", podiums: ["agora", "amphitheatre", "tribune-3", "tribune-2"], image: "stand-babylon-tribune", size: "28 × 25 × 31 см" },
-  { slug: "stand-semiramis", name: "Семирамида", base: "babylon", podiums: ["agora", "agora", "amphitheatre", "amphitheatre"], crown: true, size: "28 × 25 × 50 см" },
+  { slug: "stand-semiramis", name: "Семирамида", base: "babylon", podiums: ["amphitheatre-6", "amphitheatre-6", "amphitheatre-6", "amphitheatre-6"], crown: true, size: "28 × 25 × 50 см" },
   { slug: "stand-eden", name: "Эдэм", base: "babylon", podiums: ["marseille-25", "marseille-25", "marseille-25"], crown: true, size: "21,5 × 25 × 50 см" },
   { slug: "stand-chocolatiere", name: "Шоколатьера", base: "babylon", podiums: ["patio-3", "patio-3", "patio-1", "patio-1"], crown: true, image: "stand-babylon-crown", size: "28 × 25 × 50 см" },
 ];
@@ -918,6 +924,7 @@ const marketProducts: Product[] = [
       image: `/products/render/${s.slug}.webp`,
       art: { type: "stand", levels: base.levels, colors: ["marzipan", "marzipan", "marzipan"], crown: s.crown },
       hit: s.hit,
+      hidden: s.hidden,
       marketPreset: { base: s.base, podiums: s.podiums, crown: !!s.crown },
       zones: s.zones ?? standZones(s),
       logoGift: s.base === "paris" || undefined,
@@ -943,6 +950,7 @@ const marketProducts: Product[] = [
       { id: "c3", name: "Черничный йогурт · малиновый йогурт · марципан", swatch: "", image: photo("carnival-3") },
       { id: "c4", name: "Слоновая кость · пряная тыква · сливочное масло", swatch: "", image: photo("carnival-4") },
       { id: "c5", name: "Малиновый йогурт · клубничный йогурт · белый", swatch: "", image: photo("carnival-5") },
+      { id: "c6", name: "Белый · марципан · брауни", swatch: "", image: photo("carnival-6") },
     ],
     colors: "none",
     art: { type: "decor", label: "Карнавал", variant: "logo" },
@@ -1652,24 +1660,65 @@ const coverPhotos: Record<string, [string, string[]?]> = {
   "penny-logo": ["cover-penny-logo"],
   "penny-logo-set": ["cover-penny-logo"],
   "stand-signorina": ["cover-signorina"],
-  "penny-set": ["penny-same-size", ["penny-combo-3"]],
+  "penny-set": ["penny-set-main", ["penny-same-size", "penny-combo-3"]],
   "stand-dolce-vita": ["dolce-vita-1", ["dolce-vita-2"]],
+  // фото заказчика 22.11
+  "logo-stand": ["mk-logo-stand-zina", ["mk-logo-stand-zina2"]],
+  "stand-paris-boutique": ["mk-boutique-jewelry"],
+  "base-paris": ["mk-legs-paris"],
+  "base-florence": ["mk-legs-florence"],
+  "base-babylon": ["mk-legs-babylon"],
+  "podium-patio-1": ["mk-patio-1", ["mk-patio-all"]],
+  "podium-patio-2": ["mk-patio-2", ["mk-patio-all"]],
+  "podium-patio-3": ["mk-patio-3", ["mk-patio-all"]],
+  "podium-loge-1": ["mk-loge-1", ["mk-boutique-jewelry"]],
+  "podium-loge-2": ["mk-loge-2", ["mk-boutique-jewelry"]],
+  "podium-loge-3": ["mk-loge-3", ["mk-boutique-jewelry"]],
+  "podium-diadem": ["mk-boutique-jewelry"],
+  "podium-cascade-1": ["mk-cascade-1"],
+  "podium-cascade-2": ["mk-cascade-2"],
+  "podium-cascade-3": ["mk-cascade-3"],
+  "podium-amphitheatre": ["mk-amphitheatre-cards", ["mk-amphitheatre", "mk-pink-trio"]],
+  "podium-agora": ["mk-agora", ["mk-pink-trio"]],
+  "podium-tribune-3": ["mk-tribune-3-cards", ["mk-tribune-3"]],
+  "podium-tribune-2": ["mk-tribune-2-cards", ["mk-tribune-2", "mk-pink-trio"]],
+  "stand-chocolatiere": ["mk-chocolatiere"],
+  "stand-florence-marseille": ["mk-florence"],
+  "stand-eden": ["mk-eden"],
+  "stand-semiramis": ["mk-semiramis"],
+  "stand-babylon-tribune": ["mk-babylon"],
+  "podium-marquise-21": ["mk-marquise-21", ["mk-marquise-25"]],
+  "podium-marquise-25": ["mk-marquise-25", ["mk-marquise-21"]],
+  "podium-classic": ["classic-podium-1", ["classic-podium-2", "classic-podium-3", "classic-podium-4"]],
+  "podium-marseille-25": ["mk-marseille"],
+  "podium-marseille-21": ["mk-marseille"],
+  "cappottina-torre": ["capp-torre"],
+  "cappottina-grande": ["capp-grande"],
+  "cappottina-piccola": ["capp-piccola"],
+  "fleur-bon": ["fleur-bon-2", ["fleur-bon-pink"]],
+  "fleur-pumpkin": ["fleur-pumpkin-1"],
+  "bonbon-pumpkin": ["bonbon-pumpkin-1"],
+  "fleur-moti": ["moti-1", ["moti-top", "moti-2", "moti-3", "moti-close"]],
+  "fleur-nuts": ["nuts-side", ["nuts-top", "nuts-top2", "nuts-stands"]],
+  "extra-honey": ["insert-honey-photo", ["moti-top", "moti-close", "moti-1"]],
+  "extra-nuts": ["insert-nuts-photo", ["nuts-top", "nuts-stands", "nuts-side"]],
   // неподписанные фото заказчика (17.11), разобраны по изделиям
   "podium-milano": ["milano-pair-pink", ["milano-blue"]],
   milano: ["cover-milano", ["milano-blue", "milano-pair-pink"]],
   rossi: ["cover-rossi"],
   "podium-rossi": ["cover-rossi"],
-  "classic-muffin": ["cover-muffin", ["muffin-yanni"]],
-  "classic-marble": ["cover-marble", ["marble-bentodel"]],
+  // обложка — обычная форма; фото L/XL (приплюснутая) — в галерее и при выборе 28/30 см
+  "classic-muffin": ["muffin-logo-pink", ["muffin-butter", "muffin-logo-mocha", "cover-muffin", "muffin-yanni"]],
+  "classic-marble": ["marble-bentodel", ["cover-marble"]],
   "willy-wonka": ["cover-willy-wonka"],
   modular: ["cover-modular", ["modular-tower"]],
   "modular-plus": ["modular-plus-white", ["modular-tower"]],
   "podium-i-stand": ["cover-podium-i"],
   "podium-i": ["cover-podium-i"],
-  penny: ["penny-stack-brown"],
-  minies: ["minies-stack-flower", ["minies-tops"]],
-  "minies-set": ["minies-stack-round", ["minies-stack-flower"]],
-  "stand-leon": ["cover-leon"],
+  penny: ["penny-one-1", ["penny-stack-brown"]],
+  minies: ["minies-one-1", ["minies-one-2", "minies-one-3", "minies-one-4", "minies-one-5", "minies-one-6", "minies-one-7", "minies-one-8", "minies-stack-flower", "minies-tops"]],
+  "minies-set": ["minies-set-1", ["minies-set-2", "minies-stack-round", "minies-stack-flower"]],
+  "stand-leon": ["mk-leon-1", ["mk-leon-2", "mk-leon-3", "mk-leon-4", "cover-leon"]],
   "fleur-stand": ["fleur-stand-white"],
   "bonbon-stand": ["bonbon-stand-pink"],
   "bon-fleur": ["bon-fleur-brown"],
@@ -1677,13 +1726,15 @@ const coverPhotos: Record<string, [string, string[]?]> = {
   "bonbon-balls": ["bonbon-podium-mauve", ["bonbon-podium-pair"]],
   "podium-fleur": ["podium-fleur-brown"],
   "podium-cappottina": ["podium-cappottina-brown"],
-  "extra-nuts": ["insert-nuts-photo"],
-  "extra-honey": ["insert-honey-photo"],
   "extra-flower": ["insert-flower-photo"],
   "cachette-set-4": ["cachette-set-pastel", ["cachette-set-8"]],
   "cachette-set-8": ["cachette-set-8"],
   "cachette-set-12": ["cachette-set-pastel", ["cachette-set-8"]],
-  ...Object.fromEntries(["grande", "piccola", "pumpkin", "souffle", "muff"].map((l) => [`leg-${l}`, [`legs-all`, []] as [string, string[]]])),
+  "leg-muff": ["leg-muff-1", ["leg-muff-2", "leg-muff-3", "leg-muff-4", "legs-all"]],
+  "leg-piccola": ["leg-piccola-1", ["legs-all"]],
+  "leg-pumpkin": ["leg-pumpkin-1", ["legs-all"]],
+  "leg-souffle": ["leg-souffle-1", ["leg-souffle-2", "legs-all"]],
+  "leg-grande": ["leg-grande-1", ["legs-all"]],
 };
 function withCover(p: Product): Product {
   const c = coverPhotos[p.slug];

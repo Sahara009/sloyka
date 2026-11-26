@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { lineTitles } from "@/data/products";
-import { db } from "@/lib/server/db";
-import { catalogSource, getProducts } from "@/lib/server/catalog";
+import { catalogEditable, getProducts } from "@/lib/server/catalog";
 import { formatPrice } from "@/lib/format";
 import { updateProduct } from "../../actions";
 
@@ -10,18 +9,23 @@ import { updateProduct } from "../../actions";
  * Следующий шаг: полная форма товара (описание, фото, размеры) и загрузка фото.
  */
 export default async function AdminProducts() {
-  const editable = catalogSource === "db";
-  const rows = editable
-    ? await db().product.findMany({ orderBy: [{ line: "asc" }, { sort: "asc" }] })
-    : (await getProducts()).map((p) => ({ ...p, active: true, hit: !!p.hit }));
+  const editable = catalogEditable;
+  // товары из файла + правки из базы (цена, «в продаже», «хит»)
+  const rows = (await getProducts({ includeHidden: true })).map((p) => ({ ...p, active: !p.hidden, hit: !!p.hit }));
 
   return (
     <>
       <h1>Товары</h1>
+      {editable && (
+        <p className="admin-note">
+          Цена здесь — базовая («от»). У товаров с размерами цены каждого размера меняются через разработчика. Снятый с продажи
+          товар пропадает из каталога и корзины.
+        </p>
+      )}
       {!editable && (
         <p className="admin-note">
-          Сейчас каталог берётся из файла <code>src/data/products.ts</code>. Чтобы править цены здесь — подключите базу,
-          выполните <code>npm run db:seed</code> и поставьте <code>CATALOG_SOURCE=db</code> в .env.local.
+          База не подключена, поэтому цены здесь только для просмотра. Править цены, наличие и «хит» можно после подключения
+          базы (DATABASE_URL).
         </p>
       )}
       <table className="admin-table">

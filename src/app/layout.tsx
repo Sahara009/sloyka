@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     template: "%s · Sloyka",
   },
   description:
-    "Десертные столики Sloyka Podium и стенды Sloyka Market: собирайте подиум, ножку и детали как конструктор. 25 цветов, доставка СДЭК и Ozon.",
+    "Десертные столики Sloyka Podium и стенды Sloyka Market: собирайте подиум, ножку и детали как конструктор. 25 цветов, доставка СДЭК.",
   applicationName: "Sloyka",
   formatDetection: { telephone: false },
   // демо на GitHub Pages не индексируем, чтобы не спорило с настоящим сайтом

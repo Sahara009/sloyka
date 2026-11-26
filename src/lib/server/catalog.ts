@@ -36,16 +36,49 @@ function toProduct(r: Row): Product {
   };
 }
 
-export async function getProducts(): Promise<Product[]> {
-  if (!fromDb) return staticProducts;
+/**
+ * Правки из админки поверх товаров из файла: цена, «в продаже», «хит».
+ * Хранятся в таблице Product по slug (создаются при первом сохранении в админке, seed не нужен).
+ * Остальное (фото, слои, конструктор) всегда берётся из src/data/products.ts.
+ */
+type Override = { price: number | null; active: boolean; hit: boolean };
+async function overrides(): Promise<Map<string, Override>> {
+  if (!hasDb) return new Map();
+  try {
+    const rows = await db().product.findMany({ select: { slug: true, price: true, active: true, hit: true } });
+    return new Map(rows.map((r) => [r.slug, { price: r.price, active: r.active, hit: r.hit }]));
+  } catch (e) {
+    console.warn("[catalog] правки из базы не прочитаны:", e instanceof Error ? e.message : e);
+    return new Map();
+  }
+}
+const applyOverride = (p: Product, o?: Override): Product =>
+  o ? { ...p, price: o.price ?? p.price, hit: o.hit, hidden: p.hidden || !o.active } : p;
+
+/** Товары для витрины; includeHidden — со скрытыми (админка, страницы по прямой ссылке) */
+export async function getProducts(opts?: { includeHidden?: boolean }): Promise<Product[]> {
+  if (!fromDb) {
+    const ov = await overrides();
+    const list = staticProducts.map((p) => applyOverride(p, ov.get(p.slug)));
+    return opts?.includeHidden ? list : list.filter((p) => !p.hidden);
+  }
   const rows = await db().product.findMany({ where: { active: true }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] });
   return rows.map(toProduct);
 }
 
 export async function getProduct(slug: string): Promise<Product | undefined> {
-  if (!fromDb) return staticProducts.find((p) => p.slug === slug);
+  if (!fromDb) {
+    const p = staticProducts.find((x) => x.slug === slug);
+    if (!p) return undefined;
+    const o = (await overrides()).get(slug);
+    // снят с продажи в админке — страницы и покупки нет
+    if (o && !o.active) return undefined;
+    return applyOverride(p, o);
+  }
   const row = await db().product.findFirst({ where: { slug, active: true } });
   return row ? toProduct(row) : undefined;
 }
 
 export const catalogSource = fromDb ? "db" : "static";
+/** Цены, наличие и «хит» можно править в админке, когда подключена база */
+export const catalogEditable = hasDb;

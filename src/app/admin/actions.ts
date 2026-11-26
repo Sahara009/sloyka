@@ -6,6 +6,7 @@ import { yookassaRefund } from "@/lib/integrations/yookassa";
 import { notify, refundText } from "@/lib/integrations/telegram";
 import { requireAdmin } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
+import { products as staticProducts } from "@/data/products";
 
 const statuses = ["NEW", "PAID", "IN_PRODUCTION", "SHIPPED", "DONE", "CANCELLED"] as const;
 
@@ -26,14 +27,20 @@ export async function updateProduct(formData: FormData) {
   const priceRaw = String(formData.get("price") ?? "").trim();
   const price = priceRaw === "" ? null : Math.max(0, Math.round(Number(priceRaw)));
   if (price !== null && Number.isNaN(price)) return;
-  await db().product.update({
+  const base = staticProducts.find((p) => p.slug === slug);
+  if (!base) return;
+  const data = { price, active: formData.get("active") === "on", hit: formData.get("hit") === "on" };
+  // правка хранится по slug; если записи ещё нет — создаём её из данных товара
+  await db().product.upsert({
     where: { slug },
-    data: { price, active: formData.get("active") === "on", hit: formData.get("hit") === "on" },
+    update: data,
+    create: { slug, name: base.name, line: base.line, kind: base.kind, short: base.short ?? "", description: base.description ?? "", specs: base.specs ?? [], gallery: [], ...data },
   });
   revalidatePath("/admin/products");
   revalidatePath("/catalog");
   revalidatePath(`/catalog/${slug}`);
   revalidatePath("/");
+  revalidatePath("/business");
 }
 
 export async function toggleRequest(formData: FormData) {

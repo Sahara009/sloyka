@@ -144,6 +144,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Укажите адрес доставки" }, { status: 400 });
   }
   if (body.delivery.method === "ozon-pvz" || body.delivery.method === "wb-pvz") {
+    // отключено (26.11): в оферте доставка только СДЭК
+    return NextResponse.json({ error: "Сейчас доставляем только СДЭК — выберите пункт выдачи или курьера" }, { status: 400 });
+  }
+  if (false as boolean) {
     if (!body.delivery.marketplacePhone || body.delivery.marketplacePhone.replace(/\D/g, "").length < 10)
       return NextResponse.json({ error: "Укажите телефон, к которому привязано приложение Ozon / Wildberries" }, { status: 400 });
     deliveryAddress = `${deliveryAddress} · телефон в приложении: ${body.delivery.marketplacePhone} · доставку оформить в Telegram/Instagram, оплачивается отдельно`;
@@ -191,6 +195,7 @@ export async function POST(req: Request) {
       contactHandle: body.customer.contactHandle,
       delivery: { "cdek-pvz": "СДЭК, пункт выдачи", "cdek-courier": "СДЭК, курьер", "ozon-pvz": "Ozon", "wb-pvz": "Wildberries" }[body.delivery.method],
       address: [body.delivery.city, deliveryAddress].filter(Boolean).join(", "),
+      city: body.delivery.city,
       amount,
       deliveryPrice,
       items,

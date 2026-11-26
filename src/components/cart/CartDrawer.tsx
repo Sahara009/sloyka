@@ -100,7 +100,7 @@ export function CartDrawer() {
                 <span>Итого</span>
                 <strong>{formatPrice(total)}</strong>
               </div>
-              <p className="muted small">Доставку СДЭК или Ozon посчитаем при оформлении.</p>
+              <p className="muted small">Доставку СДЭК посчитаем при оформлении.</p>
               <Link href="/cart" className="btn btn--block" onClick={closeDrawer}>
                 Оформить заказ
               </Link>

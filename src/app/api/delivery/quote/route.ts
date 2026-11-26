@@ -51,7 +51,6 @@ export async function POST(req: Request) {
   const { boxes, zones } = await getShippingData();
   const packing = pack(withKind, boxes);
   const ozon = marketplaceRange("ozon", city, packing, zones);
-  const wb = marketplaceRange("wb", city, packing, zones);
 
   const options: QuoteOption[] = [];
   let cdekExact = false;
@@ -70,8 +69,7 @@ export async function POST(req: Request) {
     options.push({ method: "cdek-pvz", min: r(ozon.min), max: r(ozon.max), days: [ozon.days[0], ozon.days[1] + 1], approx: true });
     options.push({ method: "cdek-courier", min: r(ozon.min) + 250, max: r(ozon.max) + 400, days: [ozon.days[0], ozon.days[1] + 1], approx: true });
   }
-  options.push({ method: "ozon-pvz", min: ozon.min, max: ozon.max, days: ozon.days, approx: true });
-  options.push({ method: "wb-pvz", min: wb.min, max: wb.max, days: wb.days, approx: true });
+  // Ozon и WB отключены (26.11) — в оферте доставка только СДЭК
 
   return NextResponse.json({
     zone: ozon.zone,

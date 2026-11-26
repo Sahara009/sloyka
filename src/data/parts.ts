@@ -3,7 +3,7 @@
 
 /* ---------- Sloyka Podium: модульные десертные столики ---------- */
 
-export type PodiumId = "bonbon" | "fleur" | "cappottina";
+export type PodiumId = "bonbon" | "fleur" | "cappottina" | "classic";
 export type LegId = "piccola" | "pumpkin" | "souffle" | "muff" | "grande";
 export type HomeExtraId = "nuts" | "flower" | "honey" | "attico";
 
@@ -18,6 +18,8 @@ export const podiums: HomePart<PodiumId>[] = [
   { id: "bonbon", name: "Bonbon", price: 1500, note: "Игривый, лёгкий, с шариками по краю" },
   { id: "fleur", name: "Fleur", price: 1300, note: "Цветочный столик со сменными вкладышами" },
   { id: "cappottina", name: "Cappottina", price: 1700, note: "Элегантный, превращается во фруктовницу" },
+  // заказчик, 23.11: столешница как у Muffin и Marble, чуть ниже; логотип +500 ₽
+  { id: "classic", name: "Classic", price: 1500, note: "Классическая круглая столешница, как у Muffin и Marble" },
 ];
 
 export const legs: (HomePart<LegId> & { height: number; doubleSided: boolean })[] = [
@@ -86,7 +88,9 @@ export const marketPodiums: MarketPodium[] = [
   { id: "cascade-3", name: "Каскад-3", price: 700, group: "Каскад", specs: ["25 × 8 × 5 см (полезная зона 24,5 × 2,5 × 1,5 см)", "Вынос 1 см"] },
   { id: "tribune-2", name: "Трибуна-2", price: 900, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 24,5 × 3 × 2 см)", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
   { id: "tribune-3", name: "Трибуна-3", price: 1000, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 24,5 × 2,5 × 2 см)", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
-  { id: "amphitheatre", name: "Амфитеатр", price: 950, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 6 × 3 × 2 см)", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
+  { id: "amphitheatre", name: "Амфитеатр-8", price: 950, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 6 × 3 × 2 см)", "8 секций", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
+  // новая версия (заказчик, 23.11): 6 секций по 89 мм, остальное как у Амфитеатра-8
+  { id: "amphitheatre-6", name: "Амфитеатр-6", price: 950, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 8,9 × 3 × 2 см)", "6 секций", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
   { id: "agora", name: "Агора", price: 800, group: "Трибуна", specs: ["25 × 7 × 9,5 см (полезная зона 4 × 3 × 1,5 см)", "Подъём 2,5 см", "Только на ножки Флоренция и Вавилон"] },
   { id: "diadem", name: "Диадема", price: 1250, group: "Диадема", specs: ["25 × 7 × 1,5 см", "Высота со вставкой-крючками 17,5 см, со вставкой для пусетов 13,5 см", "Подиум + вставка-крючки + вставка для пусетов", "Ставится только наверх, вместо короны"] },
   { id: "marseille-21", name: "Марсель-21", price: 400, group: "Марсель", specs: ["21 × 8 × 0,5 см", "Вынос 1 см", "Только в комбо с Маркизой-21 и Марселем-21"] },

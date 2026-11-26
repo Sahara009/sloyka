@@ -21,6 +21,7 @@ export const podiumVisuals: Record<string, PartVisual> = {
   bonbon: { base: b("podium-bonbon"), width: cm(24), tuck: 0.499, overlays: { balls1: b("bonbon-balls1"), balls2: b("bonbon-balls2") } },
   fleur: { base: b("podium-fleur"), width: cm(24), tuck: 0.384, overlays: { nuts: b("fleur-insert-nuts"), honey: b("fleur-insert-honey"), flower: b("fleur-insert-flower") } },
   cappottina: { base: b("podium-cappottina"), width: cm(27), tuck: 0.677 },
+  classic: { base: b("podium-classic"), width: cm(24), tuck: 0.31 },
 };
 
 export const legVisuals: Record<string, PartVisual> = {

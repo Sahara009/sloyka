@@ -1,12 +1,13 @@
 /**
  * Уведомления в Telegram: новый заказ, оплата, отмена, возврат, заявка с сайта.
+ * Без персональных данных покупателя (26.11): только номер, состав, сумма, город; остальное — в админке.
  * TELEGRAM_BOT_TOKEN — токен бота от @BotFather.
  * TELEGRAM_CHAT_ID — кому писать (можно несколько через запятую). Узнать id: каждый получатель
  * пишет боту /start, потом `node --env-file=.env.local scripts/telegram-chats.mjs`.
  * Без ключей уведомления просто не отправляются — сайт работает как обычно.
  */
 import { formatPrice, site } from "@/lib/format";
-import { contactLabels, contactLink, type ContactVia } from "@/lib/contact";
+import { contactLabels, type ContactVia } from "@/lib/contact";
 
 export function telegramConfigured() {
   return Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
@@ -48,6 +49,8 @@ type OrderInfo = {
   deliveryPrice?: number | null;
   items: { name: string; qty: number; price: number; details?: string[] }[];
   comment?: string | null;
+  /** город — без адреса */
+  city?: string;
 };
 
 const adminLink = (o: { id?: string }) => (o.id ? `\n<a href="${site.url}/admin/orders/${o.id}">Открыть в админке</a>` : "");
@@ -59,21 +62,14 @@ export function newOrderText(o: OrderInfo) {
     `🧁 <b>Новый заказ ${o.number}</b> — ждёт оплаты`,
     ...lines,
     `Товары: ${formatPrice(o.amount)}${o.deliveryPrice ? ` · доставка: ${formatPrice(o.deliveryPrice)}` : ""} · <b>итого ${formatPrice(total)}</b>`,
-    `👤 ${esc(o.customerName)}, ${esc(o.phone)}, ${esc(o.email)}`,
-    ...(o.contactVia
-      ? [
-          ((link) => `📲 Связь: ${link ? `<a href="${link}">` : ""}${contactLabels[o.contactVia!]}${o.contactHandle ? ` ${esc(o.contactHandle)}` : ""}${link ? "</a>" : ""}`)(
-            contactLink(o.contactVia, o.phone, o.contactHandle),
-          ),
-        ]
-      : []),
-    `📦 ${esc(o.delivery)}: ${esc(o.address)}`,
-    ...(o.comment ? [`💬 ${esc(o.comment)}`] : []),
+    // персональные данные покупателя в Telegram не отправляем (26.11, Политика): имя, телефон, почту, адрес и связь — смотреть в админке
+    ...(o.contactVia ? [`📲 Удобная связь: ${contactLabels[o.contactVia]}`] : []),
+    `📦 ${esc(o.delivery)}${o.city ? `, ${esc(o.city)}` : ""}`,
   ].join("\n") + adminLink(o);
 }
 
 export const paidText = (o: { number: string; id?: string; total: number; customerName?: string }) =>
-  `✅ <b>Оплачен заказ ${o.number}</b> — ${formatPrice(o.total)}${o.customerName ? `, ${esc(o.customerName)}` : ""}` + adminLink(o);
+  `✅ <b>Оплачен заказ ${o.number}</b> — ${formatPrice(o.total)}` + adminLink(o);
 
 export const canceledText = (o: { number: string; id?: string }) => `⚪️ Заказ ${o.number}: оплата не прошла или отменена` + adminLink(o);
 
@@ -81,4 +77,5 @@ export const refundText = (o: { number: string; id?: string; amount: number; ful
   `↩️ Возврат по заказу ${o.number}: ${formatPrice(o.amount)}${o.full ? " (полный)" : " (частичный)"}` + adminLink(o);
 
 export const requestText = (r: { topic: string; name: string; contact: string; message?: string }) =>
-  [`✉️ <b>Заявка: ${esc(r.topic)}</b>`, `👤 ${esc(r.name)}, ${esc(r.contact)}`, ...(r.message ? [`💬 ${esc(r.message)}`] : [])].join("\n") + `\n<a href="${site.url}/admin/requests">Все заявки</a>`;
+  // без имени, контакта и текста — это персональные данные; читать в админке
+  `✉️ <b>Новая заявка: ${esc(r.topic)}</b>` + `\n<a href="${site.url}/admin/requests">Открыть в админке</a>`;

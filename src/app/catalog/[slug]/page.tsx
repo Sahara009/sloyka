@@ -15,7 +15,7 @@ type Params = { params: Promise<{ slug: string }> };
 export const revalidate = 60;
 
 export async function generateStaticParams() {
-  return (await getProducts()).map((p) => ({ slug: p.slug }));
+  return (await getProducts({ includeHidden: true })).map((p) => ({ slug: p.slug }));
 }
 
 function similar(all: Product[], p: Product, count = 4) {
@@ -74,7 +74,7 @@ export default async function ProductPage({ params }: Params) {
           <details>
             <summary>Доставка и оплата</summary>
             <div>
-              Отправляем СДЭК и Ozon по всей России. Оплата картой или через СБП.{" "}
+              Отправляем СДЭК по всей России. Оплата картой или через СБП.{" "}
               <Link href="/delivery">Подробнее</Link>
             </div>
           </details>
@@ -90,8 +90,9 @@ export default async function ProductPage({ params }: Params) {
                 <li>берегите от падений и ударов сбоку, особенно резьбу и тонкие соединения.</li>
               </ul>
               <p>
-                Не рекомендуем прямой контакт с жидкими и текучими продуктами (вода, крем, начинки): на изделие кладём только
-                сухое и готовое, например орешки, или используем подложку либо кальку.
+                Изделия по умолчанию не предназначены для прямого контакта с едой: ставьте торты и десерты на подложку или
+                кальку. Если нужен прямой контакт с продуктами — согласуйте это с нами заранее, подскажем по модели и
+                материалу.
               </p>
               <p>
                 Чистка: протирайте спиртом или влажными салфетками, сухая и слегка влажная уборка. Не замачивайте и не мойте под

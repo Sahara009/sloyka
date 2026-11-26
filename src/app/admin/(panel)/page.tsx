@@ -5,7 +5,7 @@ import { formatPrice } from "@/lib/format";
 import { dateFmt, statusLabels } from "../labels";
 
 export default async function AdminHome() {
-  const products = await getProducts();
+  const products = await getProducts({ includeHidden: true });
   const stats = hasDb
     ? await Promise.all([
         db().order.count({ where: { status: { in: ["NEW", "PAID", "IN_PRODUCTION"] } } }),

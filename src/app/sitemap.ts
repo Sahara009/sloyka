@@ -7,7 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const pages = ["", "/catalog", "/constructor", "/business", "/about", "/contacts", "/delivery", "/logo"];
   return [
     ...pages.map((p) => ({ url: `${site.url}${p}`, changeFrequency: "weekly" as const, priority: p === "" ? 1 : 0.8 })),
-    ...products.map((p) => ({ url: `${site.url}/catalog/${p.slug}`, changeFrequency: "monthly" as const, priority: 0.6 })),
+    ...products.filter((p) => !p.hidden).map((p) => ({ url: `${site.url}/catalog/${p.slug}`, changeFrequency: "monthly" as const, priority: 0.6 })),
     ...legalDocs.map((d) => ({ url: `${site.url}/legal/${d.slug}`, changeFrequency: "yearly" as const, priority: 0.2 })),
   ];
 }

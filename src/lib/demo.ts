@@ -26,7 +26,6 @@ export function demoQuote(city: string, items: { qty: number; ref?: Ref }[]) {
   }));
   const packing = pack(withKind);
   const ozon = marketplaceRange("ozon", city, packing);
-  const wb = marketplaceRange("wb", city, packing);
   const r = (n: number) => Math.round((n * 1.3) / 10) * 10;
   return {
     zone: ozon.zone,
@@ -35,8 +34,6 @@ export function demoQuote(city: string, items: { qty: number; ref?: Ref }[]) {
     options: [
       { method: "cdek-pvz", min: r(ozon.min), max: r(ozon.max), days: [ozon.days[0], ozon.days[1] + 1] as [number, number], approx: true },
       { method: "cdek-courier", min: r(ozon.min) + 250, max: r(ozon.max) + 400, days: [ozon.days[0], ozon.days[1] + 1] as [number, number], approx: true },
-      { method: "ozon-pvz", min: ozon.min, max: ozon.max, days: ozon.days as [number, number], approx: true },
-      { method: "wb-pvz", min: wb.min, max: wb.max, days: wb.days as [number, number], approx: true },
     ],
   };
 }

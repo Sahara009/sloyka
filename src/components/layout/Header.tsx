@@ -57,7 +57,7 @@ export function Header() {
 
   return (
     <header className={`header ${scrolled ? "is-scrolled" : "is-top"} ${open ? "is-menu" : ""}`}>
-      <div className="announce">Доставка СДЭК и Ozon по всей России · оплата картой и СБП</div>
+      <div className="announce">Доставка СДЭК по всей России · оплата картой и СБП</div>
       <div className="header__bar container">
         <nav className="header__nav" aria-label="Основное меню">
           {nav.slice(0, 3).map((n) => (

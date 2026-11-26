@@ -14,8 +14,9 @@ import { useCart } from "./CartProvider";
 const deliveryOptions = [
   { id: "cdek-pvz", label: "СДЭК — пункт выдачи", hint: "Цена по тарифу СДЭК, входит в оплату" },
   { id: "cdek-courier", label: "СДЭК — курьер до двери", hint: "Цена по тарифу СДЭК, входит в оплату" },
-  { id: "ozon-pvz", label: "Ozon — пункт выдачи", hint: "Оплачивается отдельно, оформим в Telegram или Instagram" },
-  { id: "wb-pvz", label: "Wildberries — пункт выдачи", hint: "Оплачивается отдельно, оформим в Telegram или Instagram" },
+  // Ozon и Wildberries отключены (26.11): в оферте доставка только СДЭК. Вернуть — раскомментировать.
+  // { id: "ozon-pvz", label: "Ozon — пункт выдачи", hint: "Оплачивается отдельно, оформим в Telegram или Instagram" },
+  // { id: "wb-pvz", label: "Wildberries — пункт выдачи", hint: "Оплачивается отдельно, оформим в Telegram или Instagram" },
 ];
 
 type QuoteOption = { method: string; price?: number; min?: number; max?: number; days: [number, number]; approx: boolean };

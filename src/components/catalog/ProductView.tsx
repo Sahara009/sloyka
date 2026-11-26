@@ -223,7 +223,7 @@ export function ProductView({ product, children }: { product: Product; children?
             <div className="family__list">
               {family.members.map((m) => {
                 const mp = productBySlug(m.slug);
-                if (!mp) return null;
+                if (!mp || (mp.hidden && m.slug !== product.slug)) return null;
                 // цена того же размера, что выбран сейчас (16 / 24 см), иначе базовая
                 const same = optionId ? mp.options?.find((o) => o.id === optionId) : undefined;
                 const price = same ? same.price : effectivePrice(mp);
@@ -266,7 +266,11 @@ export function ProductView({ product, children }: { product: Product; children?
                           type="button"
                           className={`size ${o.id === optionId ? "is-active" : ""}`}
                           aria-pressed={o.id === optionId}
-                          onClick={() => setOptionId(o.id)}
+                          onClick={() => {
+                            setOptionId(o.id);
+                            // у размеров со своим фото (L/XL) показываем его, у остальных — рендер в цветах
+                            setShot(o.photo ?? null);
+                          }}
                         >
                           {o.label}
                           <small>{formatPrice(o.price)}</small>
@@ -430,7 +434,7 @@ export function ProductView({ product, children }: { product: Product; children?
               <label className="check">
                 <input type="checkbox" checked={withLogo} onChange={(e) => setWithLogo(e.target.checked)} />
                 <span>
-                  Добавить ваш логотип{product.logoFlat ? " (врезной)" : ""} · +{formatPrice(logoOffer)}
+                  Добавить ваш логотип{product.logoFlat ? (product.slug.includes("classic") ? " (на торце)" : " (врезной)") : ""} · +{formatPrice(logoOffer)}
                   {!product.logoFlat && <small className="muted"> (Лого PRO — от 600 ₽, по запросу)</small>}
                 </span>
               </label>

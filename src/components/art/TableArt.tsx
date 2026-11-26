@@ -172,6 +172,17 @@ function Podium({ id, y, color, extra }: { id: PodiumId; y: number; color: strin
     );
   }
 
+  if (id === "classic") {
+    const t = 12;
+    return (
+      <g>
+        <ellipse cx={CX} cy={y + t} rx={92} ry={20} fill={side} />
+        <rect x={CX - 92} y={y} width={184} height={t} fill={side} />
+        <ellipse cx={CX} cy={y} rx={92} ry={20} fill={color} stroke={line} strokeWidth={1} />
+      </g>
+    );
+  }
+
   // cappottina — пышный «цветок»
   const t = 26;
   return (

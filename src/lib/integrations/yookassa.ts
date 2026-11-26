@@ -1,12 +1,11 @@
 import { randomUUID } from "node:crypto";
 
 /**
- * ЮKassa — подходит самозанятым: карты, СБП, SberPay; чек в «Мой налог» ЮKassa формирует сама,
- * если в личном кабинете включена интеграция с «Мой налог».
+ * ЮKassa — подходит самозанятым: карты, СБП, SberPay, T-Pay, ЮMoney.
+ * Чек в «Мой налог» продавец выбивает вручную (у ЮKassa связки нет — ответ поддержки, ноябрь 2026).
  * Ключи: YOOKASSA_SHOP_ID и YOOKASSA_SECRET_KEY (ЛК ЮKassa → Интеграция → Ключи API).
  * Уведомления: в ЛК указать URL https://<сайт>/api/payments/yookassa, события payment.succeeded,
  * payment.canceled и refund.succeeded.
- * TODO: сверить поля с актуальной документацией ЮKassa перед запуском.
  */
 const API = "https://api.yookassa.ru/v3";
 
@@ -66,7 +65,7 @@ export async function yookassaGet(id: string): Promise<YooPayment> {
 
 /**
  * Возврат покупателю (полный или частичный). Деньги уходят на ту же карту / счёт, обычно за 1–3 дня.
- * У самозанятого ЮKassa сама аннулирует или корректирует чек в «Мой налог», если интеграция включена.
+ * Чек в «Мой налог» после возврата продавец аннулирует или корректирует вручную.
  */
 export async function yookassaRefund(paymentId: string, amountRub: number, description?: string): Promise<{ id: string; status: string }> {
   const res = await fetch(`${API}/refunds`, {

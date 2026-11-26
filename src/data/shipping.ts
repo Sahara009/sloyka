@@ -38,6 +38,8 @@ export const partPhysics: Record<string, Physics> = {
   bonbon: { length: 24.5, width: 24.5, height: 6, weight: 205 },
   fleur: { length: 24, width: 24, height: 7, weight: 160 },
   cappottina: { length: 28, width: 28, height: 9, weight: 232 },
+  // Classic Podium — 180 г (заказчик, 23.11)
+  classic: { length: 24, width: 24, height: 5, weight: 180 },
   // ножки
   piccola: { length: 14, width: 14, height: 8, weight: 95, nests: true },
   pumpkin: { length: 15, width: 15, height: 8, weight: 115, nests: true },
@@ -65,6 +67,8 @@ Object.assign(partPhysics, {
   "tribune-2": mp(25, 7, 9.5, 180),
   "tribune-3": mp(25, 7, 9.5, 205),
   amphitheatre: mp(25, 7, 9.5, 185),
+  // Амфитеатр-6: вес как у Амфитеатра-8 (заказчик, 23.11)
+  "amphitheatre-6": mp(25, 7, 9.5, 185),
   agora: mp(25, 7, 9.5, 150),
   // диадема 95 + вставки для пусетов 29 и для цепочек 62 г
   diadem: mp(25, 7, 1.5, 186),
